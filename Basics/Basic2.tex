@@ -1,0 +1,124 @@
+\documentclass{article}
+\usepackage{enumitem}
+\usepackage{graphicx}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+
+\section{The processor}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=1.2\textwidth]{../CPUandDevices.jpg}
+\caption{A simplified view of a processor with one CPU, one memory and certain number of I/O devices}
+\end{figure}
+
+\paragraph{CPU}
+Components of CPU:
+\begin{itemize}
+\item ALU.
+\item Control Unit.
+\item Clock.
+\item Registers.
+\end{itemize}
+
+\newpage
+\paragraph{CPU communication with the memory and the I/O devices}
+Buses:
+\begin{itemize}
+\item Data bus $\rightarrow$ Handles the transfer of instructions and data between the CPU, memory and I/O devices.
+\item Address bus $\rightarrow$ Helps to hold the address of instructions and the data that are being transferred between the CPU and memory and any of the other different devices.
+\item Control bus $\rightarrow$ Synchronizes all the actions between all of the devices that are attached to the bus. It helps us understand where we are reading and writing and what we are interacting with at the given time.
+\end{itemize}
+
+\section{Components of a CPU}
+\subsection{ALU}
+\paragraph{}
+\begin{itemize}
+\item \textbf{A}rithmetic \textbf{L}ogic \textbf{U}nit.
+\item Carries out logic and arithmetic.
+\item Performs operations like add, subtract, multiply, divide and logical operations like AND, OR, NOT, etc.
+\end{itemize}
+
+\subsection{Memory registers}
+\paragraph{}
+\begin{itemize}
+\item A type of computer memory close to the CPU.
+\item Fastest way to access data.
+\end{itemize}
+
+\newpage
+\subsection{CPU clock}
+\paragraph{}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{../Cycle.jpg}
+\caption{A cycle}
+\end{figure}
+The time between each drop from $1$ to $0$ gives us a single cycle of the clock. \textbf{Analogy:} Think of a cycle as a heart beat.
+\begin{itemize}
+\item Cycles between being on($1$) and being off($0$).
+\item Ticks at constant rate.
+\item Operations between CPU and bus are synchronized by an internal clock.
+\item Basic unit for instruction is a machine/clock cycle.
+\item Measured in oscillations per second($1\ GHz\ =\ 1\ billion\ times\ per\ second$).
+\end{itemize}
+
+\subsection{Control unit}
+\begin{itemize}
+\item Uses a binary decoder to convert coded instructions into timing and control signals.
+\item Direct operations to other units(memory, ALU, I/O).
+\end{itemize}
+
+\newpage
+\section{Instruction Execution Cycle}
+\paragraph{}
+\begin{itemize}
+\item CPU completes a predefiend set of steps to execute an instruction.
+\item Steps:
+\begin{enumerate}[label=\roman*.]
+\item Fetch an instruction from the instruction queue.
+\item Decode the instruction and check for operands.
+\item If operands are involved, fetch the operands from memory/registers.
+\item Execute the instruction and update status flags.
+\item Store the result if required.
+\end{enumerate}
+\item This is called \textbf{Fetch Decode Execute} procedure.
+\end{itemize}
+
+\newpage
+\section{Reading from memory}
+\paragraph{}
+\begin{itemize}
+\item Memory access is slower than register access.
+\item Following steps are required:
+\begin{enumerate}[label=\roman*.]
+\item Place the address of the value you want to read on the address bus.
+\item Change the processor's RD pin(called \textbf{assert}).
+\item Wait one clock cycle for memory to respond.
+\item Copy the data from the data bus to the destination.
+\end{enumerate}
+\item Each step takes approximately one clock cycle.
+\item Register access usually takes only one clock cycle.
+\end{itemize}
+
+\newpage
+\section{Caching}
+\paragraph{}
+\begin{itemize}
+\item To reduce the read/write time for memory, caches are used.
+\item In x86:
+\begin{itemize}
+\item Level-1 cache is stored on the CPU.
+\item Level-2 cache is stored outside and accessed by high-speed data bus.
+\end{itemize}
+\item Constructed using static RAM, which doesn't need to be refreshed constantly.
+\end{itemize}
+
+\end{document}

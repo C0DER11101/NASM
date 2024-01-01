@@ -1,0 +1,68 @@
+\documentclass{article}
+\usepackage{amsmath}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+
+\section{Binary operations}
+\paragraph{\underline{Addition}}
+
+\begin{align*}
+0 + 0 &= 0 \\
+0 + 1 &= 1 \\
+1 + 0 &= 1 \\
+1 + 1 &= 10 \\
+\end{align*}
+
+$1\ +\ 1\ = 2$ but since we are working with binary here, we write $(2)_{10}$ as $(10)_2$.
+
+\paragraph{\underline{Signed binary numbers}}
+
+To represent a negative number in binary, we apply $2$'s complement.
+
+Consider the decimal number $2$.
+
+The $32$-bit representation of $(2)_{10}$ is:
+$$
+(00000000\ 00000000\ 00000000\ 00000010)_2
+$$
+
+To find the $2$'s complement, we \textbf{first invert all the bits of the binary representation of} $2$. And this what we get:
+
+$$
+(11111111\ 11111111\ 11111111\ 11111101)_2
+$$
+
+This is $1$'s complement of $2$.
+
+Now, for $2$'s complement, we \textbf{add a $1$ to this $1$'s complement}.
+
+\begin{align*}
+11111111 11111111 11111111 11111101 \\
+                                 +1 \\
+\hline
+11111111 11111111 11111111 11111110
+\end{align*}
+
+
+So, $(11111111 11111111 11111111 11111110)_2$ is the binary representation of $-2$.
+
+Now, if we add $-2$ and $2$, we end up with $0$.
+
+This condition is satisfied by their binary representations as well.
+
+\begin{align*}
+ 00000000 00000000 00000000 00000010 \\
++11111111 11111111 11111111 11111110 \\
+\hline
+ 00000000 00000000 00000000 00000000
+\end{align*}
+
+Now, notice there that we still have a $1$ as a carry. In assembly languages, this $1$ goes into a special register known as \textbf{carry register}.
+
+\end{document}

@@ -1,0 +1,60 @@
+\documentclass{article}
+\usepackage{enumitem}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+
+\section{x86 processor operations and features}
+
+\subsection{Modes of operation}
+\paragraph{}
+\begin{itemize}
+\item \textbf{Protected mode} $\rightarrow$ This is the native(\textit{default}) processor state. The idea is that multiple processes can run but they are each given their own section of memory meaning that means that they can't interact with processes directly. This allows us to stop from illegal operations that could possibly cause a process to fail.
+\item \textbf{Real address mode} $\rightarrow$ The idea is that it allows us to directly access hardware components. It's useful if we are going to be working at a hardware level and interacting with hardware devices as it allows us to more easily access those devices.
+\item \textbf{System management mode} $\rightarrow$ Provides an operating system with mechanisms for power management and security. Main use of this mode is if we are designing a system very specific to a chip. It helps us to build something very specific to the processor.
+\end{itemize}
+
+\newpage
+\section{Register fundamentals}
+\paragraph{}
+\begin{itemize}
+\item x86 is a 32-bit processor which means that each register is 32 bits in size.
+\item Example registers: EAX, EBX, ECX, EDX
+\begin{enumerate}[label=$\bullet$]
+\item You can access just 16 bits by dropping the E i.e by giving AX, BX, CX, DX.
+\item You can access 8-bit high registers using: AH, BH, CH, DH.
+\item You can access 8-bit low registers using: AL, BL, CL, DL.
+\end{enumerate}
+\item Here are some registers(note that these are just conventions associated with each registers, in general all these registers can be used):
+\begin{enumerate}[label=$\bullet$]
+\item eax $\rightarrow$ Extended accumulator, automatically used by multiplication and division instructions.
+\item ebx $\rightarrow$ General purpose.
+\item ecx $\rightarrow$ Used as loop counter by the CPU.
+\item edx $\rightarrow$ General purpose.
+\item esi $\rightarrow$ High speed memory transfer.
+\item edi $\rightarrow$ High speed memory transfer.
+\item ebp $\rightarrow$ Used to reference function parameters and local variables on the stack(very important).
+\item esp $\rightarrow$ A pointer to the current stack address(very important).
+\end{enumerate}
+\end{itemize}
+
+\newpage
+\section{Special purpose registers}
+\begin{itemize}
+\item EIP $\rightarrow$ The instruction pointer. It points to the address of the next instruction.
+\item EFLAGS $\rightarrow$ Flags to denote the status of of an operation:
+\begin{enumerate}[label=$\bullet$]
+\item CF(carry flag) $\rightarrow$ Tells us if an operation had a carry.
+\item OF(overflow flag) $\rightarrow$ Tells us if an operation had an overflow.
+\item SF(sign flag) $\rightarrow$ Tells us if a result was negative or positive.
+\item ZF(zero flag) $\rightarrow$ Tells us if the result is zero.
+\item AC(auxiliary carry).
+\item PF(parity flag).
+\end{enumerate}
+\end{itemize}
+\end{document}

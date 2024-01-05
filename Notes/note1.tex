@@ -1,0 +1,213 @@
+\documentclass{article}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{varwidth}
+\usepackage{hyperref}
+\usepackage{fancyvrb}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+\section{First assembly program}\label{sec:firstAsm}
+
+\paragraph{}
+
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+	global _start
+	
+	_start:
+		MOV eax, 1
+		MOV ebx, 1
+		INT 80h
+\end{Verbatim}
+
+View the program \href{https://github.com/C0DER11101/NASM/blob/nAsM/programs/asm1.asm}{here}.
+
+\vspace{10pt}
+\textbf{Breaking down the program:}
+
+\begin{itemize}
+\item \textbf{.data} $\rightarrow$ This section is used for declaring and initializing variables.
+\item \textbf{.section} $\rightarrow$ This section contains the actual code of the program.
+\item \textbf{\_start} $\rightarrow$ This is the entry point of the program.
+\item \textbf{MOV eax, 1} $\rightarrow$ Moves the immediate value $1$ to the register \textbf{eax}.
+\item \textbf{MOV ebx, 1} $\rightarrow$ Moves the immediate value $1$ to the register \textbf{ebx}.
+\item \textbf{INT 80h} $\rightarrow$ An interrupt with the value $80h$(\textit{h} stands for \textit{hexadecimal}).
+\end{itemize}
+
+$\bullet$ In x86 architecture, interrupt \textbf{0x80}(or \textbf{80h} is commonly used for making system calls in Linux.
+
+$\bullet$ The value $1$ in \textbf{eax} corresponds to the \textbf{sys\_exit} system call in Linux.
+
+$\bullet$ The value $1$ in \textbf{ebx} is interpreted as the exit status code.
+
+$\bullet$ \textbf{INT 80h} triggers an interrupt which transfers the control to the Linux kernel to execute the system call.
+
+\vspace{10pt}
+
+\newpage
+\noindent
+\fbox{\begin{varwidth}{\textwidth}
+\textbf{\underline{Simple explanation}}
+
+\vspace{10pt}
+This program is going to trigger an interrupt which will transfer the control to the kernel which will perform an action based on the value that is put into \textbf{eax}(in this case it's $1$). So, basically \textbf{eax} tells the operating system what we want to do when the interrupt $80$ is caught. So, in this case, we want the operating system to run the exit system call when the interrupt is caught. The exit system call will end the program and will set an exit status code. The status code is going to be whatever value we put into \textbf{ebx}(in this case, the status code will be $1$).
+
+So, in summary, register \textbf{eax} is telling us what system call we want to do. Register \textbf{ebx} tells what we want to output as our status code. \textbf{INT 80h} triggers an interrupt which tells the operating system to exit the program using \textbf{eax} set to $1$.
+
+\vspace{10pt}
+
+There are some system calls mentioned along with their numbers \href{https://www.tutorialspoint.com/assembly_programming/assembly_system_calls.htm}{here}.
+\end{varwidth}}
+
+\section{Compiling the assembly program}\label{sec:compiling}
+\paragraph{}
+\begin{Verbatim}[frame=single]
+$ nasm -f elf -o asm1.o asm1.asm
+\end{Verbatim}
+
+Basically we are compiling our assembly program to an object file using the file format \textit{elf}.
+
+Next, we use the GNU linker to link the object file and create an executable:
+\begin{Verbatim}[frame=single]
+$ ld -m elf_i386 asm1 asm1.o
+\end{Verbatim}
+
+$\bullet$ \textbf{-m elf\_i386} $\rightarrow$ Indicates the target architecture. Here it is set to \textbf{elf\_i386} which means the x86 architecture($32$-bit).
+
+After linking the object file, we have our executable file which is \textbf{asm1}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{Output1.png}
+\caption{The executable \textbf{asm1}}
+\end{figure}
+
+We can run this executable:
+
+\begin{Verbatim}[frame=single]
+$ ./asm1
+\end{Verbatim}
+
+\newpage
+Since we set an exit status code in \textbf{ebx}, after running this executable, we can view that exit status code.
+In Linux, the \textbf{\$?} stores the exit status code of any command.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{Output2.png}
+\caption{The exit status code in \textbf{\$?}}
+\end{figure}
+
+\section{Using GDB with our executable}\label{sec:gdbexec}
+\paragraph{}
+First, we will open GDB with our executable:
+\begin{Verbatim}[frame=single]
+$ gdb ./asm1
+\end{Verbatim}
+
+\subsection{Opening the assembly layout in GDB}\label{sec:asmLayout}
+\paragraph{}
+\begin{Verbatim}[frame=single]
+(gdb) layout asm
+\end{Verbatim}
+This opens the assembly layout where we can view the assembly code of our currently executing function.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{Output3.png}
+\caption{\textbf{layout asm}}
+\end{figure}
+\newpage
+\subsection{Setting breakpoints}\label{sec:breakpoints}
+\paragraph{}
+Now, we will set a break point at \textbf{\_start} label.
+\begin{Verbatim}[frame=single]
+(gdb) break _start
+\end{Verbatim}
+
+Next, we will run the program:
+\begin{Verbatim}[frame=single]
+(gdb) r
+\end{Verbatim}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{Output4.png}
+\caption{Break points set}
+\end{figure}
+
+Execution stopped at the \textbf{\_start} label.
+
+\subsection{Executing one instruction at a time}
+\paragraph{}
+Now, we will use the \hyperref[sec:stepi]{\textbf{stepi}} command of GDB to execute each instruction, one at a time.
+
+\newpage
+\begin{Verbatim}[frame=single]
+(gdb) stepi
+\end{Verbatim}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{Output5.png}
+\caption{Executing one instruction at a time}
+\end{figure}
+
+\subsection{Viewing the value stored in a register}
+\paragraph{}
+The instruction \textbf{MOV eax, 1} got executed and execution stopped at the instruction after it. To prove that $1$ indeed got stored into \textbf{eax}, we will use the following command:
+\begin{Verbatim}[frame=single]
+(gdb) info registers eax
+\end{Verbatim}
+
+\newpage
+This gives us the following output:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output6.png}
+\caption{Checking if \textbf{eax} actually stores $1$ or not}
+\end{figure}
+
+So, \textbf{eax} stores the value $1$.
+
+We can also see what is stored in the \textbf{ebx} register.
+
+For that, we use the same command:
+\begin{Verbatim}[frame=single]
+(gdb) info registers ebx
+\end{Verbatim}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{Output7.png}
+\caption{Checking the value of the \textbf{ebx} register}
+\end{figure}
+
+Now, we again use the \textbf{stepi} command to execute the instruction \textbf{MOV ebx, 1} and then run the \textbf{info registers} command again:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output8.png}
+\caption{Updated value of \textbf{ebx}}
+\end{figure}
+
+\newpage
+\section{\textit{stepi} command}\label{sec:stepi}
+\paragraph{}
+This command is used to execute a single machine instruction and then stop, allowing the user to step through a program at the assembly instruction level.
+
+This command is a part of GDB's low-level debugging features.
+
+It's useful for understanding the execution flow of a program at the machine code level.
+
+\end{document}

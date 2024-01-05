@@ -83,7 +83,7 @@ Basically we are compiling our assembly program to an object file using the file
 
 Next, we use the GNU linker to link the object file and create an executable:
 \begin{Verbatim}[frame=single]
-$ ld -m elf_i386 asm1 asm1.o
+$ ld -m elf_i386 -o asm1 asm1.o
 \end{Verbatim}
 
 $\bullet$ \textbf{-m elf\_i386} $\rightarrow$ Indicates the target architecture. Here it is set to \textbf{elf\_i386} which means the x86 architecture($32$-bit).

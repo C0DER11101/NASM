@@ -1,0 +1,163 @@
+\documentclass{article}
+\usepackage{xr}
+\usepackage{enumitem}
+\usepackage{fancyvrb}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{varwidth}
+
+\externaldocument{note1}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+
+\begin{document}
+\section{Data section}\label{sec:dSection}
+\paragraph{}
+We define variables inside the \textbf{data} section of the assembly program.
+
+The format is like so:
+\begin{Verbatim}[frame=single]
+section .data
+	num DD 5
+section .text
+	global _start
+	....
+	....
+	....
+\end{Verbatim}
+So while declaring variables in the \textbf{data} section, provide these three things:
+\begin{enumerate}
+\item Name of the variable(in this case it's \textbf{num}).
+\item Type of the variable(in this case it's \textbf{DD}).
+\item Value for the variable(in this case it's $5$).
+\end{enumerate}
+
+Here are the various types that we can give to variables:
+\begin{enumerate}
+\item \textbf{DB} $\rightarrow$ Define byte($1$ byte).
+\item \textbf{DW} $\rightarrow$ Define word($2$ bytes).
+\item \textbf{DD} $\rightarrow$ Double word($4$ bytes).
+\item \textbf{DQ} $\rightarrow$ Double-precision floating-point constants($8$ bytes).
+\item \textbf{DT} $\rightarrow$ Extended-precision floating-point constants($10$ bytes).
+\end{enumerate}
+
+This is the complete program:
+
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+	num DD 5
+section .text
+	global _start
+	
+	_start:
+		MOV eax, 1
+		MOV ebx, num
+		INT 80h
+\end{Verbatim}
+
+Here, we tried to move the value of \textbf{num} into the register \textbf{ebx}.
+\newpage
+Notice what happens when we run this program:
+
+\textbf{Compilation}
+\begin{Verbatim}[frame=single]
+$ nasm -f elf -o asm2.o asm2.asm
+\end{Verbatim}
+\textbf{Linking}
+\begin{Verbatim}[frame=single]
+$ ld -m elf_i386 -o asm2 asm2.o
+\end{Verbatim}
+
+Now, we will run the executable:
+
+\begin{Verbatim}[frame=single]
+$ ./asm2
+\end{Verbatim}
+
+The program runs without any errors, but what value does \textbf{\$?} store????
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{Output9.png}
+\caption{Unexpected value of \textbf{\$?}}
+\end{figure}
+
+We can see that \textbf{\$?} stores $0$ when it should have stored $5$ in it because we stored the value \textbf{num} into \textbf{ebx}. \textbf{DIDN'T WE??}
+
+\section{Debugging time}\label{sec:debugging}
+\paragraph{}
+Let's see what GDB has to tell us.
+Everything is the same as \autoref{sec:gdbexec}.
+\newpage
+In the figure below:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output10.png}
+\caption{Surprise!}
+\label{fig:surprise}
+\end{figure}
+
+we can see a value getting stored into the register \textbf{ebx} but we are sure that it's not $5$ because when we use the \textbf{info registers} command we can see the decimal form of that hexadecimal number and we can see that it's not $5$. 
+
+\textit{What is it??} That is actually the address that is getting stored into register \textbf{ebx}.
+
+\textit{Whose address??} The address of the data for the variable \textbf{num}. This address is stored by the variable \textbf{num}. So, \textbf{num} is basically storing the location on the stack where the number $5$ is located. Oh no! Where is $5$!!! No worries, we can view the value $5$ via the following command:
+
+\begin{Verbatim}[frame=single]
+(gdb) x/x $ebx
+\end{Verbatim}
+This will give us the following result:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output11.png}
+\caption{Value at address stored in \textbf{ebx}}
+\end{figure}
+
+\newpage
+Wow! It's the same hexadecimal address \textbf{0x804a000} but there is also another value in hexadecimal along with it and that is $5$. So this tells us that the location(\textbf{0x804a000} is where $5$ is located.
+
+\subsection{Then how do we get the value $5$ out of that address??}\label{sec:howto}
+\paragraph{}
+
+Following changes are made:
+\begin{Verbatim}[frame=single]
+MOV ebx, [num]
+\end{Verbatim}
+The $\lbrack$ $\rbrack$ are kind of like the dereference operator(*) in C/C++. Basically what it does is that it goes to the address stored in \textbf{num} gets the value stored in that address and moves it to the register \textbf{ebx}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{Output12.png}
+\caption{Value of \textbf{\$?} as expected}
+\end{figure}
+
+Let's see with GDB.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output13.png}
+\caption{Notice the difference}
+\end{figure}
+
+Notice the difference between this figure and figure \ref{fig:surprise}. There is no \$ before \textbf{0x804a000} in this figure but there is one on the other figure.
+
+\newpage
+Also, the command \textbf{info registers} command also gives the following output:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output14.png}
+\caption{\textbf{ebx} stores $5$}
+\end{figure}
+
+\end{document}

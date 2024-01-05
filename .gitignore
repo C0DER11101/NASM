@@ -11,5 +11,4 @@
 *.aux
 *.log
 *.o
-asm[0-9]*
 *.out

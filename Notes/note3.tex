@@ -1,0 +1,369 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{fancyvrb}
+\usepackage{graphicx}
+\usepackage{varwidth}
+
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+
+\section{Working with byte and word data}\label{sec:byteANDword}
+\paragraph{}
+We are declaring some bytes in the assembly program below:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+	num DB 1
+	num2 DB 2
+	num3 DB 3
+
+section .text
+	global _start
+	_start:
+		MOV ebx, [num]
+		MOV ecx, [num2]
+		MOV edx, [num3]
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+So, everything looks normal(for now). We are just moving the bytes into the registers. Note that these registers are $32$-bit registers i.e. $4$ byte registers and the variables are just $1$ byte each.
+
+So, how will $1$ byte be stored in 4 bytes?? Let's find out using GDB.
+
+\newpage
+\section{Using GDB to find out how $1$ byte is stored in $4$ bytes}\label{sec:how}
+\paragraph{}
+Eveything is just the same as the previous examples. Let's focus on the main portion.
+
+The assembly layout:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output15.png}
+\caption{Starting with GDB}
+\end{figure}
+
+Notice the value in \textbf{ebx} in the image below:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{Output16.png}
+\caption{Value in \textbf{ebx}}
+\label{fig:inEBX}
+\end{figure}
+
+We can see that via the \textbf{info registers} command that the value in \textbf{ebx} is not $1$. Rather it's a very large number.
+\newpage
+How??
+
+If we use the \textbf{x/x} command then we will get the following:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output17.png}
+\caption{What does \textbf{0x804a000} store in it??}
+\end{figure}
+
+So, this tells us that in the address \textbf{0x804a000} which is a $32$-bit address the value stored in it is \textbf{0x00030201}. What is this value?!
+
+If we look at the binary equivalent of this hexadecimal equivalent number:
+$$
+(00030201)_{16}\ =\ (00000000\ 00000011\ 00000010\ 00000001)_2
+$$
+We can clearly see that $(00000011)_2$ is $(3)_{10}$ in decimal, $(00000010)_2$ is $(2)_{10}$ in decimal and $(00000001)_2$ is $(1)_{10}$ in decimal.
+
+So, bytes, in a $32$-bit register or are stored next to each other.
+
+We have more to see because the number of bytes stored in 4 bytes changes in each of the registers.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output18.png}
+\caption{Value in \textbf{ecx}(Notice the change)}
+\label{fig:valECX}
+\end{figure}
+
+As we move towards the next instruction using the \textbf{stepi} command, we can see that \textbf{MOV ecx, $\lbrack$num2$\rbrack$} gets executed.
+
+\vspace{10pt}
+Notice that \textbf{ecx} stores a value(look at the hexadecimal value).
+
+We again use the \textbf{x/x} command on the next address which is \textbf{0x804a001}(also, notice that the addresses \textbf{0x804a000}, \textbf{0x804a001} and \textbf{0x804a002}, all these are 1 byte apart from each other).
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output19.png}
+\caption{Value of \textbf{0x804a001}}
+\label{fig:figure5}
+\end{figure}
+
+We can see that the binary equivalent of \textbf{0x00000302} is:
+$$
+(00000302)_{16}\ =\ (00000000\ 00000000\ 00000011\ 00000010)_2
+$$
+\newpage
+Now, we again step to the next instruction: \textbf{INT 80h} which means that \textbf{MOV edx, $\lbrack$num3$\rbrack$} has completed execution.
+Let's see what \textbf{edx} has in store:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{Output20.png}
+\caption{Value in \textbf{edx}}
+\end{figure}
+
+So, \textbf{edx} stores only $3$.
+Let's see what is in \textbf{0x804a002}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output21.png}
+\caption{Value in \textbf{0x804a002}}
+\end{figure}
+
+$(00000003)_{16}$ in hexadecimal is $(00000000\ 00000000\ 00000000\ 00000011)_2$ in binary.
+
+Why were these numbers stored in the registers like this???
+
+Let's look at the data section again:
+\begin{Verbatim}[frame=single]
+section .data
+	num DB 1
+	num2 DB 2
+	num3 DB 3
+\end{Verbatim}
+If we look at, say, \hyperref[fig:figure5]{Figure~\ref*{fig:figure5}} we can see the value(in hex) \textbf{0x00000302}. As we know that one hex digit represents $4$-bits. So, two hex digits will represent $8$-bits or $1$ byte. So from the figure we can say that \textbf{0x02} represents $1$ byte, \textbf{0x03} represents $1$ byte, \textbf{0x00} represents $1$ byte and the last(left-most) \textbf{0x00} also represents $1$ byte. So all total there $4$ bytes i.e $32$-bits.
+\newpage
+\section{IMPORTANT}
+\paragraph{\textbf{How actually is $1$ byte stored in the $32$-bit address?}}
+
+\vspace{10pt}
+$\bullet$ Let's know a basic concept first:  \textbf{The memory is like a big array}.
+
+\vspace{10pt}
+We know that \textbf{0x804a000} is a $32$-bit long \textbf{address}. That doesn't mean that the memory block is $32$-bits long. It's like the memory blocks shown in figure \hyperref[fig:memmkup]{Figure~\ref*{fig:memmkup}}. So, the length of the address has nothing do with the size of the memory block to which that address is pointing to.
+
+Now, coming to the command \textbf{x/x}. Let's understand the meaning of this command:
+
+\textbf{x/x} $\rightarrow$ This command is used to examine memory at a specified address and display the contents as a \textbf{single hexadecimal integer}. The \textbf{/x} modifier specifies the \textbf{display format} as hexadecimal.
+
+For example:
+\begin{Verbatim}[frame=single]
+(gdb) x/x 0x804a000
+\end{Verbatim}
+
+This command will basically display the contents of the memory pointed to by this address(\textbf{0x804a000}) as a $32$-bit hexadecimal integer. This $32$ bit hexadecimal integer is not only taken from \textbf{0x804a000} but this $32$-bit hexadecimal is made up of $3$ more memory blocks pointed to by \textbf{0x804a001}, \textbf{0x804a002} and \textbf{0x804a003} each address contributing $1$ byte($2$ hex digits). \textbf{I}n simple words this command displays the contents in the memory starting from \textbf{0x804a000} and going all the way till \textbf{0x804a003}.
+
+And that's the reason why we see \textbf{0x00030201}. Now if we look at this hexadecimal integer, \textbf{0x00} is the MSB and \textbf{0x01} is LSB. So the byte ordering is \textit{Little Endian} because the LSB is stored in \textbf{0x804a000} which is the first address. 
+
+Watch this \href{https://www.youtube.com/watch?v=jhErugDB-34}{\textbf{video}}.
+
+\vspace{5pt}
+
+Consider this command:
+\begin{Verbatim}[frame=single]
+(gdb) x/1xb 0x804a000
+\end{Verbatim}
+
+This command displays $1$ byte in hexadecimal format. So, in this case only the value in the memory block pointed to by \textbf{0x804a000} will be displayed as a hexadecimal byte. See figure \hyperref[fig:hexB]{Figure~\ref*{fig:hexB}}.
+
+\vspace{10pt}
+Now, for \underline{\textbf{x/3xb}}
+
+\begin{Verbatim}[frame=single]
+(gdb) x/3xb 0x804a000
+\end{Verbatim}
+
+This command displays $3$ consecutive bytes in hexadecimal format. The three consecutive bytes will come from \textbf{0x804a000}, \textbf{0x804a001} and \textbf{0x804a002}. \textbf{0x804a000} stores $1$(hex: \textbf{0x01}), \textbf{0x804a001} stores $2$(hex: \textbf{0x02}) and \textbf{0x804a002} stores $3$(hex: \textbf{0x03}). See figure \hyperref[fig:3hexB]{Figure~\ref*{fig:3hexB}}.
+
+\vspace{5pt}
+Note that this command(s) will work in similar way for any address not just for \textbf{0x804a000}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=1.2\textwidth]{MemoryMakeup.jpg}
+\caption{Memory makeup}
+\label{fig:memmkup}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.3\textwidth]{hex1.png}
+\caption{Hexadecimal byte}
+\label{fig:hexB}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{hex2.png}
+\caption{$3$ hexadecimal bytes}
+\label{fig:3hexB}
+\end{figure}
+
+\newpage
+\noindent
+\fbox{\begin{varwidth}{\textwidth}
+\underline{\textbf{How are registers storing the values?}}
+
+\vspace{10pt}
+Now, the registers \textbf{ebx}, \textbf{ecx} and \textbf{edx} are 32-bit registers(see \hyperref[fig:x86]{Figure~\ref*{fig:x86}}).
+
+Now, if we want to see the contents inside of register \textbf{ebx}, then we will use the \textbf{info registers} command(see \hyperref[fig:inEBX]{Figure~\ref*{fig:inEBX}}). We can see that \textbf{ebx} stores the value \textbf{0x30201}. Why?? Because \textbf{ebx} is a $32$-bit register.
+When we execute \textbf{MOV ebx, [num]} then since \textbf{ebx} is a $32$-bit register so the contents of the memory block starting from address \textbf{0x804a000} are stored into the register. We know \textbf{0x804a000} points a memory block of $1$ byte data but \textbf{ebx} is $4$ bytes long, so we need $3$ more bytes to store into \textbf{ebx}. So, the memory blocks pointed to by the addresses \textbf{0x804a001}, \textbf{0x804a002} and \textbf{0x804a003} are also stored into the register \textbf{ebx}.
+
+\vspace{10pt}
+Similarly when we execute \textbf{MOV ecx, [num2]} then again $4$ bytes are stored into register \textbf{ecx}. So the contents of the memory block starting from the address \textbf{0x804a001} to \textbf{0x804a004} are stored into the register. That's why when we run the \textbf{info registers} command on \textbf{ecx} we get the output that we see in \hyperref[fig:valECX]{Figure~\ref*{fig:valECX}} because the address \textbf{0x804a001} points to a memory block that contains the byte $2$(hex: \textbf{0x02}), \textbf{0x804a002} points to a memory block that contains the byte $3$(hex: \textbf{0x03}), \textbf{0x804a003} points to a memory block that is uninitialized and so is the case with \textbf{0x804a004}.
+\end{varwidth}}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{x86Registers.png}
+\caption{x86 Registers(Image source: \href{https://www.google.com/}{Google})}
+\label{fig:x86}
+\end{figure}
+
+\newpage
+\begin{itemize}
+\item I found these links helpful:
+\begin{enumerate}[label=$\bullet$]
+\item \href{https://cs.stackexchange.com/questions/157633/why-does-a-32-bit-address-only-contain-1-byte-when-32-bits-4-bytes}{https://cs.stackexchange.com/questions/157633/why-does-a-32-bit-address-only-contain-1-byte-when-32-bits-4-bytes}
+\item \href{https://www.quora.com/How-does-a-32-bit-address-represent-1-byte-of-memory}{https://www.quora.com/How-does-a-32-bit-address-represent-1-byte-of-memory}
+\end{enumerate}
+\end{itemize}
+
+\section{The solution to the problem}\label{sec:solution}
+\paragraph{}
+Before starting, this image is important:
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{Registers.jpg}
+\caption{Register sizes}
+\label{fig:registerSize}
+\end{figure}
+
+We modified our program:
+
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+	num DB 1
+	num2 DB 2
+	num3 DB 3
+	
+section .text
+	global _start
+	_start:
+		MOV bl, [num]
+		MOV cl, [num2]
+		MOV dl , [num3]
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+And again starting debugging using GDB.
+
+\noindent
+\fbox{\begin{varwidth}{\textwidth}
+\underline{\textbf{NOTE:}}
+
+\vspace{10pt}
+Now, from \hyperref[fig:registerSize]{Figure~\ref*{fig:registerSize}}, we can say that \textbf{EAX} is a $32$-bit register, \textbf{AX} is a sub-register that is $16$-bits, \textbf{AH}(high order byte) is another sub-register that is $8$-bits in size and \textbf{AL}(low order byte) is yet another sub-register whose size equals the size of \textbf{AH}. Similarly, for registers \textbf{EBX}, \textbf{ECX} and \textbf{EDX}, we have similar sub-registers as well(letter-wise i.e for \textbf{EBX} there are \textbf{BX}, \textbf{BH}, \textbf{BL}).
+
+\end{varwidth}}
+
+\vspace{10pt}
+Now, when we use the command:
+
+\begin{Verbatim}[frame=single]
+(gdb) info registers bl
+\end{Verbatim}
+
+This is what we get:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output23.png}
+\caption{Finally! Some normal output}
+\label{fig:norm1}
+\end{figure}
+
+So, $1$ is stored into the lower bits. Register \textbf{bl} is $1$ byte long and only $1$ byte can be stored in it.
+
+But surprisingly, when we type:
+\begin{Verbatim}[frame=single]
+(gdb) info registers ebx
+\end{Verbatim}
+
+We get the following output:
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output24.png}
+\caption{\textbf{ebx} stores only $1$ now!!}
+\label{fig:norm2}
+\end{figure}
+
+Why did that happen?? Because we know that \textbf{bl} is a sub-register of \textbf{ebx} and it is $1$ byte long and also it is the lower byte of \textbf{ebx}. So when we stored the value of \textbf{num} into \textbf{bl}. Only the lower $8$-bits($1$ byte) of \textbf{ebx} got initialized and the rest $24$ bits were uninitialized($0$). And the whole register kind of looked like this:
+$$
+00000000\ 00000000\ 00000000\ 00000001
+$$
+That is the reason why we see $1$ in \textbf{ebx}.
+
+\newpage
+\section{What will happen if we store the bytes in the higher byte of the registers?}\label{sec:highByte}
+\paragraph{}
+Now, we again modified our program:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+	num DB 1
+	num2 DB 2
+	num3 DB 3
+	
+section .text
+	global _start
+	_start:
+		MOV bh, [num]
+		MOV ch, [num2]
+		MOV dh, [num3]
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+We are storing the bytes in the higher bytes of the registers. Let's see what happens then.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output25.png}
+\caption{Storing in the higher bytes}
+\label{fig:storeHighB}
+\end{figure}
+
+One thing is very clear that when we check the values in the registers \textbf{bh} and \textbf{ch} we can see that the correct values are stored(just like the previously modified code) because these registers are $8$ bits in size.
+
+But one thing is different, the value in the $32$-bit registers \textbf{ebx} and \textbf{ecx} are not $1$ and $2$, they are something else. HOW??
+
+\vspace{10pt}
+Let's see. In this program we stored the bytes in the high bytes of the registers i.e $1$ is stored in the higher bytes of the register \textbf{ebx}(see \hyperref[fig:registerSize]{Figure~\ref*{fig:registerSize}}).
+
+\vspace{10pt}
+So for that reason the \textbf{ebx} looks kind of like this:
+$$
+00000000\ 00000000\ 00000001\ 00000000
+$$
+\newpage
+This binary representation is actually of the decimal number $256$(i.e $2^8$ if you look at the position of $1$).
+
+\vspace{10pt}
+Similarly, the register \textbf{ecx} looks kind of like this:
+$$
+00000000\ 00000000\ 00000010\ 00000000
+$$
+This binary representation is of the decimal number $512$(i.e $2^9$, look at the position of $1$).
+
+And that's the reason why we see those values while checking the values in the registers \textbf{ebx} and \textbf{ecx}.
+
+
+\end{document}

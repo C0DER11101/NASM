@@ -1,0 +1,150 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{fancyvrb}
+\usepackage{graphicx}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+
+\section{Characters, strings and lists}
+\subsection{Characters}\label{sec:chars}
+\paragraph{}
+Consider the following program:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+	char DB 'A'
+	
+section .text
+	global _start
+	_start:
+		MOV bl, [char]
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+
+The value of \textbf{\$?} is as follows:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{Output26.png}
+\caption{Value of \textbf{\$?}}
+\label{fig:statusCode}
+\end{figure}
+
+Since \textbf{bl} is a sub-register of the register \textbf{ebx} and the register \textbf{ebx} is used to store status code which is stored in \textbf{\$?} that's why we can see $65$ in \textbf{\$?}.
+
+\vspace{10pt}
+We know that $65$ is the \href{https://www.cs.cmu.edu/~pattis/15-1XX/common/handouts/ascii.html}{ASCII value} of the character \textbf{A}. When we work with anyting in assembly, it's stored as numeric(mostly as binary) data. So, when storing the character \textbf{A}(or any other character) it is encoded in a way so that it has a numeric value(there are many encodings like ASCII, UTF-8, etc) that represents \textbf{A}(or any other character). So, here $65$ represents the character \textbf{A}.
+\newpage
+\subsection{Lists}\label{sec:lists}
+\paragraph{}
+Consider this program:
+
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+	list DB 1, 2, 3, 4
+
+section .text
+	global _start
+	_start:
+		MOV bl, [list]
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+Here, \textbf{list} is a list of bytes.
+
+Let's see how the bytes are stored in the memory.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output27.png}
+\caption{Bytes in \textbf{0x804a000}}
+\label{fig:bytes}
+\end{figure}
+We can see the bytes \textbf{0x01}, \textbf{0x02}, \textbf{0x03} and \textbf{0x04}. So, basically it's a list of bytes. Declaring a list of bytes is similar to declaring separate bytes(as seen from \href{https://github.com/C0DER11101/NASM/blob/nAsM/Notes/note3.pdf}{here}). They are stored in the same manner.
+
+\vspace{10pt}
+Now, we will run the following commands:
+\begin{Verbatim}[frame=single]
+(gdb) x/x 0x804a000
+(gdb) x
+\end{Verbatim}
+
+Here is the output:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output28.png}
+\caption{\textbf{x/x} \textbf{0x804a000}}
+\label{fig:x/x}
+\end{figure}
+
+From the output it's clear that \textbf{x/x 0x804a000} showed the contents of the memory block starting from \textbf{0x804a000} till \textbf{0x804a003}(Visit this \href{https://visualgdb.com/gdbreference/commands/x}{link}).
+\newpage
+When we use only the \textbf{x}(no address expression) command, it basically displays the memory contents from the address following the contents of the last memory address. In this case, we can see that \textbf{x/x 0x804a000} printed the contents of memory addresses \textbf{0x804a000}, \textbf{0x804a001}, \textbf{0x804a002} and \textbf{0x804a003}. Next when we run the only the \textbf{x} command then it displays the contents inside memory addresses starting from \textbf{0x804a004} all the way till \textbf{0x804a007}.
+
+The following command:
+\begin{Verbatim}[frame=single]
+(gdb) x/2x 0x804a000
+\end{Verbatim}
+will display the contents of $2$ units of memory ($4$ bytes/unit). This means the contents of the first memory unit(from \textbf{0x804a000} to \textbf{0x804a003}) will be displayed and then the contents of second memory unit(from \textbf{0x804a004} to \textbf{0x804a007}) will be displayed.
+\newpage
+\subsection{Strings}\label{sec:strings}
+\paragraph{}
+The following x86 assembly program uses strings:
+
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+	string1 DB "ABA", 0
+	string2 DB "CDE", 0
+	
+section .text
+	global _start
+	_start:
+		MOV bl, [string1]
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+The $0$ at the end of each string is actually the \textbf{\textit{null terminator}}.
+
+We run the following command:
+\begin{Verbatim}[frame=single]
+(gdb) x/x 0x804a000
+\end{Verbatim}
+
+The following output is generated:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output29.png}
+\caption{Storing strings}
+\label{fig:storeStrings}
+\end{figure}
+
+We can see the hex value of \textbf{A}(\textbf{0x41}), of \textbf{B}(\textbf{0x42}) and of \textbf{A}(\textbf{0x41}).
+
+Now, again, we will use the \textbf{x/2x} command on \textbf{0x804a000}. We get the following output:
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{Output30.png}
+\caption{Output of \textbf{x/2x 0x804a000}}
+\label{fig:x/2x}
+\end{figure}
+
+We have two strings and each has a null terminator.
+
+From memory blocks starting from \textbf{0x804a000} to \textbf{0x804003} we have stored the string \textbf{"ABA$\backslash$0"}. The \textbf{0x00} is actually the null terminator(not an empty or uninitialized byte). The next hexadecimal value \textbf{0x00454443} is actually the string \textbf{"CDE$\backslash$0"}(\textbf{0x00} is for the null terminator("$\backslash$0")).
+
+\newpage
+These two strings are stored in two different units. $1$ unit starts from \textbf{0x804a000} to \textbf{0x804a003}($4$ bytes) and the other unit starts from \textbf{0x804a004} to \textbf{0x804a007}($4$ bytes).
+
+\end{document}

@@ -166,7 +166,7 @@ section .text
 \end{Verbatim}
 Now, we have initialized $25$ bytes for \textbf{num2} and \textbf{num} is an array of $3$ bytes.
 
-Starting address of \textbf{num2} is \textbf{0x804a000}. We reserved $25$ bytes. So, as per memory alignment we need to align to $4$-byte boundary. Now, the smallest multiple of $4$ that is greater than or equal to $25$ is $28$(4$\times$7). Note that \textbf{num} is also aligned since it is only $3$ bytes long. $(28)_{10}\ =$ (0x1c)$_{16}$. So \textbf{0x804a000} and the starting address of \textbf{num} will be $28$ bytes apart.
+Starting address of \textbf{num2} is \textbf{0x804a000}. We reserved $25$ bytes. So, as per \href{https://youtu.be/OKjOZBaKlOc?si=MfDv0w7Zp7E7uQI0}{memory alignment} we need to align to $4$-byte boundary. Now, the smallest multiple of $4$ that is greater than or equal to $25$ is $28$(4$\times$7). Note that \textbf{num} is also aligned since it is only $3$ bytes long. $(28)_{10}\ =$ (0x1c)$_{16}$. So \textbf{0x804a000} and the starting address of \textbf{num} will be $28$ bytes apart.
 
 $$
 (0x804a000)_{16}\ =\ (134520832)_{10}

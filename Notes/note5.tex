@@ -1,0 +1,187 @@
+\documentclass{article}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{fancyvrb}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+\section{Declaring uninitialized data}\label{sec:first}
+\paragraph{}
+Let's look at a program:
+\begin{Verbatim}[numbers=left, frame=single]
+section .bss
+	num RESB 3
+
+section .text
+	global _start
+	_start:
+		MOV bl, 1
+		MOV [num], bl
+\end{Verbatim}
+\begin{itemize}
+\item \textbf{RESB} $\rightarrow$ means reserve bytes.
+\item \textbf{RESW} $\rightarrow$ means reserve word.
+\item \textbf{RESD} $\rightarrow$ means reserve double words.
+\item \textbf{RESQ} $\rightarrow$ means reserve quadwords.
+\end{itemize}
+Now, why did we not just do: \textbf{MOV [num], 1} ? Beacause x86 doesn't know how big \textbf{num} is. That's why we need to store a byte in(in this case $1$) into a register first so as to provide that setting of having some definite size so that x86 can perform the \textbf{MOV} operation on \textbf{num}. Basically \textbf{num} is actually a byte array that can store $3$ bytes. So as we know(from C/C++) in an array, \textbf{the array name points to the starting address of the array}. Similarly, \textbf{num} points to the first memory location.
+
+\textbf{Instructions like MOV depend on the size of the operands to know how many bytes to transfer}. So, here in the instruction \textbf{MOV [num], bl} we are basically moving the one byte stored in \textbf{bl} to the byte memory slot of \textbf{num}.
+
+As mentioned earlier, \textbf{num} points to the first memory location, if we want to get to the second memory location we will write: \textbf{[num+1]} and if we want to get to the third memory location we will write \textbf{[num+2]}. Now, this offset depends on the type of data we are working with. Here we are working with bytes. If we were working with words, then to get to the second memory location then we will write: \textbf{[num+2]}(since a word is $2$ bytes in size) and to get to the third memory location we will write: \textbf{[num+4]}.
+
+\newpage
+Let's start debugging the program.
+
+\rule{\linewidth}{1pt}
+\underline{\textbf{Layout}}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{Output31.png}
+\caption{Layout}
+\label{fig:fig1}
+\end{figure}
+
+\textit{\textbf{What has changed in the layout?}} $\rightarrow$ The instructions are written in intel assembly language syntax. Generally, the instructions are written in AT\&T syntax. To use this layout in gdb, we need to run the following command:
+\begin{Verbatim}[frame=single]
+$ echo "set disassembly-flavor intel" > ~/.gdbinit
+\end{Verbatim}
+Basically, here we are configuring GDB to use intel syntax. To stop the intel layout, we can just open the \textbf{.gdbinit} file and remove the command(\textbf{"set disassembly-flavor intel"} from there.
+
+\rule{\linewidth}{1pt}
+\newpage
+So, we can see from the figure below that initially \textbf{0x804a000} contained $0$(the addresses \textbf{0x804a000}, \textbf{0x804a001} and \textbf{0x804a002} are addresses of the three memory blocks that were reserved for \textbf{num}).
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output32.png}
+\caption{Value in \textbf{0x804a000}}
+\label{fig:fig2}
+\end{figure}
+
+After we ran the \textbf{stepi} command, the instruction \textbf{MOV [num], bl} got executed and then the value \textbf{0x01} was stored in the address \textbf{0x804a000}.
+
+\vspace{10pt}
+So, as we go on executing the next instruction the value start getting stored into the memory blocks.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output33.png}
+\caption{Values getting stored}
+\label{fig:fig3}
+\end{figure}
+
+The two values(hex) that we see in the image above(i.e \textbf{0x01} and the last \textbf{0x01}($1^{st}$ from the left)) get stored in the memory blocks pointed to by the addresses \textbf{0x804a001} and \textbf{0x804a002} respectively.
+
+\newpage
+\section{Can we do the same in the data section?}\label{sec:datSec}
+\paragraph{}
+In the data section, we can only define initialized data.
+\begin{Verbatim}[frame=single]
+section .data
+	num DB 3 DUP(2)
+\end{Verbatim}
+This basically defines \textbf{num} as an array of $3$ bytes where each byte stores the value $2$. \textbf{DUP} here means "duplicate". That means $2$ is duplicated three times.
+
+\subsection{Important}\label{sec:imp}
+\paragraph{}
+An assembly program:
+\begin{Verbatim}[frame=single]
+section .bss
+	num RESB 3
+
+section .data
+	num2 DB 3 DUP(2)
+
+section .text
+	global _start
+	_start:
+		MOV bl, 1
+		MOV bl, [num2]
+		MOV [num], bl
+		MOV [num+1], bl
+		MOV [num+2], bl
+		
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+The addresses in the image are $4$ bytes apart.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{Output34B.png}
+\caption{The addresses}
+\label{fig:fig4}
+\end{figure}
+\newpage
+Now, \textbf{num2} is points to the first memory location which is \textbf{0x804a000}(since it's a byte array).
+
+Also, \textbf{num} is also a byte array which points to the first memory location which is \textbf{0x904a004}.
+
+Now, we allocated only $3$ bytes to \textbf{num2} then why is the address of the byte array \textbf{num} starting from \textbf{0x804a004}? It should have started from \textbf{0x804a003}.
+
+Two reasons:
+
+\begin{itemize}
+\item \underline{\textbf{Memory alignment}}
+\begin{enumerate}[label=\textopenbullet]
+\item Variables are aligned to addresses that are multiples of their size.
+\item \textbf{num} is $3$ bytes long so it will be aligned to a $4$-byte boundary i.e the smallest multiple of $4$ that is greater than or equal to $3$.
+\end{enumerate}
+\item \underline{\textbf{Section}}
+\begin{enumerate}[label=\textopenbullet]
+\item \textbf{num} and \textbf{num2} are placed in different sections.
+\end{enumerate}
+\end{itemize}
+
+\vspace{10pt}
+For example:
+\begin{Verbatim}[numbers=left, frame=single]
+section .bss
+	num DB 3
+	
+section .data
+	num2 DB 25 DUP(2)
+
+section .text
+	global _start
+	_start:
+		MOV bl, 1
+		MOV bl, [num2]
+		MOV [num], bl
+		MOV [num+1], bl
+		MOV [num+2], bl
+		
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+Now, we have initialized $25$ bytes for \textbf{num2} and \textbf{num} is an array of $3$ bytes.
+
+Starting address of \textbf{num2} is \textbf{0x804a000}. We reserved $25$ bytes. So, as per memory alignment we need to align to $4$-byte boundary. Now, the smallest multiple of $4$ that is greater than or equal to $25$ is $28$(4$\times$7). Note that \textbf{num} is also aligned since it is only $3$ bytes long. $(28)_{10}\ =$ (0x1c)$_{16}$. So \textbf{0x804a000} and the starting address of \textbf{num} will be $28$ bytes apart.
+
+$$
+(0x804a000)_{16}\ =\ (134520832)_{10}
+$$
+\newpage
+Now we will add $134520832$ with $28$, this gives us $134520860$.
+$$
+(134520860)_{10}\ =\ (804a01c)_{16}
+$$
+And that is what we see when we run gdb.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{Output34.png}
+	\caption{The addresses $28$ bytes apart}
+	\label{fig:fig4}
+\end{figure}
+
+\end{document}

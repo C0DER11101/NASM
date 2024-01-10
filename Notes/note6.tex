@@ -1,0 +1,200 @@
+\documentclass{article}
+\usepackage{fancyvrb}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{graphicx}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+\section{ADD, ADC and EFLAGS}\label{sec:sec1}
+\subsection{The ADD instruction}\label{sec:subsec1}
+\paragraph{}
+Consider the following program:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+	global _start
+	_start:
+		MOV eax, 1
+		MOV ebx, 2
+		ADD eax, ebx
+		INT 80h
+\end{Verbatim}
+The instruction \textbf{ADD eax, ebx} means the same as: \textbf{eax = eax + ebx}.
+
+\subsubsection{Debugging}\label{sec:subsubsec1}
+\paragraph{}
+Below are the values of the registers \textbf{eax} and \textbf{ebx} in before and after performing addition.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output35.png}
+\caption{Value of \textbf{eax} after addition}
+\label{fig:fig1}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output36.png}
+\caption{Value of \textbf{ebx} before addition}
+\label{fig:fig2}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output37.png}
+\caption{Value of \textbf{eax} after addition}
+\label{fig:fig3}
+\end{figure}
+\newpage
+\subsection{EFLAGS}\label{sec:subsec2}
+\paragraph{}
+There is one more register called the \textbf{eflags} register. It is a $32$-bit register used to indicate the \textbf{status/information} about the computations and control CPU operations. Each bit represents a specific flag.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{Output38.png}
+\caption{The \textbf{eflags} register.}
+\label{fig:fig4}
+\end{figure}
+
+Here \textbf{eflags} is giving information about the \textbf{ADD} operation and we see that two of its flags are set \textbf{PF} and \textbf{IF}.
+
+\vspace{10pt}
+\textbf{PF} is the \textbf{P}arity \textbf{F}lag. This flag is \textit{set} if the value of an operation is \textbf{odd}. If the value of an operation is an even number then PF is set to $0$. So, the \textbf{ADD} operation resulted into an odd value which is $3$ and that's why PF was set.
+
+\vspace{10pt}
+\textbf{IF} is the \textbf{I}nterrupt \textbf{F}lag. This flag is \textit{set} to $1$ when we allow interrupts to be done on our system.
+
+The figure below shows the the \textbf{eflags} register:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{EFLAGS.jpg}
+\caption{The \textbf{eflags} register.[Image source: \href{https://www.geeksforgeeks.org/eflags-registers-of-80386-microprocessor/}{GeeksForGeeks}]}
+\label{fig:fig5}
+\end{figure}
+
+\rule{\linewidth}{5pt}
+\underline{\textbf{NOTE:}} In the assembly program above, include the line: \textbf{MOV eax, 1} before the interrupt statement otherwise the program won't exit and it will throw \textbf{segmentation fault}.
+
+\rule{\linewidth}{5pt}
+\newpage
+\subsubsection{More flags of the EFLAGS register}\label{sec:subsubsec2}
+\paragraph{}
+Consider the following program:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+	MOV al, 0b11111111
+	MOV bl, 0b0001
+	ADD al, bl
+	MOV eax, 1
+	INT 80h
+\end{Verbatim}
+The notation \textbf{0b} indicates a binary number. Therefore \textbf{0b11111111} indicates a binary number. Basically, this program adds two numbers. One is $-1$(in \textbf{al}) and the other is $1$(in \textbf{bl}). We know that the result is $0$ but we want to see how this is operation performed and if any carry is generated then where that carry is stored.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{Output39.png}
+\caption{\textbf{al} stores $-1$}
+\label{fig:fig6}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output40.png}
+\caption{\textbf{bl} stores $1$}
+\label{fig:fig7}
+\end{figure}
+\newpage
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output41.png}
+\caption{\textbf{al} stores $0$}
+\label{fig:fig8}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output42.png}
+\caption{\textbf{eax} also stores $0$}
+\label{fig:fig9}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{Output43.png}
+\caption{\textbf{eflags} has some set bits}
+\label{fig:fig10}
+\end{figure}
+
+The \textbf{ADD} operation looks like this:
+
+%We can see from \hyperref[fig:
+
+\begin{align*}
+11111111 \\
+00000001 \\
+\_\_\_\_\_\_\_\_\_\_\_\_ \\
+00000000
+\end{align*}
+This operation was shown for \textbf{al} and \textbf{bl}. So when we check the register \textbf{al}(\hyperref[fig:fig8]{Figure~\ref{fig:fig8}}), we see that it stores $0$. But interestingly enough, when we check the \textbf{eax} register(\hyperref[fig:fig9]{Figure~\ref{fig:fig9}}), we see that it also stores $0$.
+
+The reason is that, the \textbf{ADD} operation was performed for only $1$ byte registers(\textbf{al} and \textbf{bl} in this case). So, when the extra $1$(carry) resulted from the addition, it was put into the \textbf{CF} flag of the \textbf{eflags} register and that is the reason why we see $0$ as the value of \textbf{eax} as well.
+
+\vspace{10pt}
+\textbf{CF} is the \textbf{C}arry \textbf{F}lag. When there is a carry from the previous operation, then it's set to $1$.
+
+\vspace{10pt}
+\textbf{ZF} is the \textbf{Z}ero \textbf{F}lag. It is set if the register that results from the operation is $0$. In our case, \textbf{al} got set to $0$.
+\newpage
+\subsection{The ADC instruction}\label{sec:subsec3}
+\paragraph{}
+Consider this assembly program:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+	global _start
+	_start:
+		MOV al, 0b11111111
+		MOV bl, 0b0001
+		ADD al, bl  ; al = al + bl
+		ADC ah, 0
+		MOV eax, 1
+		INT 80h
+
+\end{Verbatim}
+ADC instruction is called add with carry. It works similar to the \textbf{ADD} operation. It takes a destination and adds a source to it. It then adds the CF to the destination.
+
+In this program we are using the \textbf{ah}(higher $8$ bits) to store the carry. The instruction \textbf{ADC ah, 0} will basically add $0$ to \textbf{ah} and then will also add the CF(the carry bit in CF) to it and store the result in \textbf{ah}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{Output44.png}
+\caption{Value of \textbf{ah} and \textbf{eax}}
+\label{fig:fig11}
+\end{figure}
+
+We can see that \textbf{ah} stores $1$(which is the CF) and \textbf{eax} stores $256$.
+
+Now the reason \textbf{eax} stores $256$ is that it is a $32$-bit register and \textbf{ah} is its higher $8$-bits. So we know that the lower $8$ bits(\textbf{al}) were all zeros(from addition) and the higher $8$-bits were all $0$ as well(from the previous addition). But now, we used the \textbf{ADC} instruction to put the carry into the higher $8$ bits of \textbf{eax} which make it look like this:
+$$
+00000000\ 00000000\ 00000001\ 00000000
+$$
+
+which is $256$ in decimal.
+
+\end{document}

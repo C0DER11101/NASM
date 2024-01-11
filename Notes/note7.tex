@@ -1,0 +1,110 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{fancyvrb}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+\section{Subtraction and sign flags}\label{sec:sec1}
+\subsection{Subtraction}\label{sec:subsec1}
+\paragraph{}
+Assembly program:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+	MOV eax, 5
+	MOV ebx, 3
+	SUB eax, ebx
+	MOV eax, 1
+	INT 80h
+\end{Verbatim}
+The instruction \textbf{SUB eax, ebx} means $eax\ =\ eax\ -\ ebx$.
+This is normal subtraction where we are subtracting a smaller number from a larger number.
+
+We can see the values of the register \textbf{eax} before and after subtraction.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output45.png}
+\caption{Values in \textbf{eax}}
+\label{fig:fig1}
+\end{figure}
+
+This was simple subtraction.
+
+Now, we will execute the following assembly program using GDB:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+	MOV eax, 3
+	MOV ebx, 5
+	SUB eax, ebx
+	MOV eax, 1
+	INT 80h
+\end{Verbatim}
+
+Here also, we are performing the subtraction operation, but this time we are subtracting the larger number from the smaller number(which will result in a negative number).
+\newpage
+We can see that \textbf{eax} stores $-2$.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output46.png}
+\caption{Negative value in \textbf{eax}}
+\label{fig:fig2}
+\end{figure}
+
+We can also view which flags were set during this operation.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{Output47.png}
+\caption{The flags that were set}
+\label{fig:fig3}
+\end{figure}
+
+The \textbf{CF} serves two functions in x86:
+\begin{itemize}
+\item it represents a carry
+\item it also represents a \textbf{borrow}
+\end{itemize}
+
+Following are some rules for binary subtraction:
+\begin{align*}
+0 - 0 &= 0 \\
+1 - 0 &= 1 \\
+0 - 1 &= 1(with\ borrow\ 1) \\
+1 - 1 &= 0 \\
+\end{align*}
+
+\vspace{10pt}
+\textbf{SF} means the \textbf{S}ign \textbf{F}lag. When this flag is set to $1$, it indicates that the operation produced a negative output(in our case it's $-2$).
+
+Let's say that we added the following lines to the assembly program above:
+\begin{Verbatim}[numbers=left, frame=single]
+MOV ebx, 2
+ADD eax, ebx
+\end{Verbatim}
+\newpage
+Now, what we basically did was this: $-2$ was stored in the register \textbf{eax}. Now we changed the value of \textbf{ebx} to $2$ and then performed addition operation on \textbf{eax} and \textbf{ebx}. Since we are adding $-2$(in \textbf{eax}) and $2$(in \textbf{ebx}) we get a $0$ which is stored in register \textbf{eax}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output48.png}
+\caption{Values of \textbf{eax} before and after addition}
+\label{fig:fig4}
+\end{figure}
+
+\end{document}

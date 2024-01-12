@@ -1,0 +1,133 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+\section{Multiplying numbers with \textit{MUL} and \textit{IMUL}}\label{sec:sec1}
+\paragraph{}
+
+\begin{itemize}
+\item \textbf{MUL} $\rightarrow$ Multiplies unsigned numbers.
+
+\item \textbf{IMUL} $\rightarrow$ Multiplies signed numbers.
+\end{itemize}
+
+\subsection{Using the \textbf{MUL} instruction}\label{sec:subsec1}
+\paragraph{}
+Assembly program to multiply two numbers using \textbf{MUL}:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+	global _start
+	_start:
+		MOV al, 2
+		MOV bl, 3
+		MUL bl
+		
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+The \textbf{MUL} instruction requires only one register. The reason is that the register \textbf{eax} is automatically used by multiplication and division instructions meaning that we don't need to specify it explicitly.
+
+Here is an image showing the value in \textbf{al} before and after multiplication:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{Output49.png}
+\caption{Values of \textbf{al}}
+\label{fig:fig1}
+\end{figure}
+
+\newpage
+\underline{What happens if the result of the multiplication is larger than the register?}
+
+\textbf{Program:}
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+	global _start
+	_start:
+		MOV al, 0xFF
+		MOV bl, 2
+		MUL bl
+		
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+\textbf{0xFF} in $8$-bit representation is $-1$ and in $16$-bit representation is $255$. Now, we store this value in the register \textbf{al}.
+
+When the multiplication operations is performed then we get the following result:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{Output50.png}
+\caption{Negative numbers}
+\label{fig:fig2}
+\end{figure}
+
+So after performing multiplication we see that $-2$ is stored in \textbf{al}. We know that $-2$ can be represented in $8$-bit binary as $11111110$.
+\newpage
+Now, if we check what is stored in the higher-bit register \textbf{ah}, then we will get the following:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{Output51.png}
+\caption{Value in \textbf{ah} and $16$-bit representation of $-2$}
+\label{fig:fig3}
+\end{figure}
+
+Now, after that we check what is the value stored in $16$-bits that is register \textbf{ax}. We get $510$.
+
+Now the binary representation of $510$ in $16$-bits is:
+$$
+00000001\ 11111110
+$$
+The lower $8$-bits are in \textbf{al} and higher $8$-bits are in the register \textbf{ah}.
+\newpage
+\subsection{Using the IMUL instruction}\label{sec:subsec2}
+\paragraph{}
+Program:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+	global _start
+	
+	_start:
+		MOV al, 0xFF
+		MOV bl, 2
+		IMUL bl
+		
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+When we multiply two $n$-bit numbers, the product is $2*n$-bits long. Keeping that in mind, when $2$ is multiplied to $-1$ then we get the product as $-2$. This product is stored in the register \textbf{al} and also in \textbf{ah} because the product is $16$(i.e $2*8$)-bits long.
+
+This is shown in the image below:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{Output52.png}
+\caption{Registers: \textbf{al}, \textbf{ah} and \textbf{ax}}
+\label{fig:fig4}
+\end{figure}
+
+Basically this is what is stored in \textbf{ax}:
+$$
+11111111\ 11111110
+$$
+The lower $8$-bits are stored in \textbf{al} and the higher $8$-bits are stored in \textbf{ah}.
+
+\end{document}

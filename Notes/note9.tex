@@ -1,0 +1,136 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\begin{document}
+\section{Dividing integers with \textit{DIV} and \textit{IDIV}}\label{sec:sec1}
+\paragraph{}
+\begin{itemize}
+\item \textbf{DIV} $\rightarrow$ Divides unsigned numbers.
+\item \textbf{IDIV} $\rightarrow$ Divides signed numbers.
+\end{itemize}
+
+\subsection{The DIV instruction}\label{sec:subsec1}
+\paragraph{}
+Consider the following assembly program:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+	global _start
+	
+	_start:
+		MOV eax, 11
+		MOV ecx, 2
+		
+		DIV ecx
+		
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+The \textbf{DIV} and \textbf{IDIV} instructions work just like the \textbf{MUL} and \textbf{IMUL}.
+The \textbf{eax} register is automatically used by the \textbf{DIV} and \textbf{IDIV} instructions.
+
+In the program, \textbf{eax} is the dividend and \textbf{ecx} is the divisor. The quotient gets stored in \textbf{eax} and the remainder gets stored in the register \textbf{edx} as shown in the image below:
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output53.png}
+\caption{Values in \textbf{eax} and \textbf{edx}}
+\label{fig:fig1}
+\end{figure}
+\newpage
+\subsection{The IDIV instruction}\label{sec:subsec2}
+\paragraph{}
+Program:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+	MOV eax, -6
+	MOV ecx, 2
+	
+	IDIV ecx
+	
+	MOV eax, 1
+	INT 80h
+\end{Verbatim}
+Here, we are dividing a negative number($-6$) by $2$.
+
+These values are stored in the registers \textbf{eax} and \textbf{ebx}:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{Output54.png}
+\caption{Values of \textbf{eax} before and after dividing.}
+\label{fig:fig2}
+\end{figure}
+
+So, we can see that \textbf{edx} stores the remainder(as we know) which is $0$. \textbf{eax} stores the the quotient. We can see that \textbf{eax} stores a rather larger value, it was expected to store $-3$.
+
+Now, if we check the value in the sub-register \textbf{ax} then we get $-3$:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output55.png}
+\caption{$-3$ in \textbf{ax}}
+\label{fig:fig3}
+\end{figure}
+
+\newpage
+Now, we also check in the registers \textbf{ah} and \textbf{al}. We get the following coutput:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output56.png}
+\caption{Values in \textbf{ah} and \textbf{al}}
+\label{fig:fig4}
+\end{figure}
+
+\textbf{al} stores $-3$ and \textbf{ah} stores $-1$.
+
+On converting the value of \textbf{eax} to binary we get this:
+
+$$
+01111111\ 11111111\ 11111111\ 11111101
+$$
+\textbf{ax} stores the last $16$-bits, out of those $16$-bits, the higher $8$-bits are in \textbf{ah} and the lower $8$-bits are stored in \textbf{al}. We also know that $11111101$ is $-3$.
+
+\subsubsection{Comparision}\label{sec:subsubsec1}
+\paragraph{}
+If we take $-6$ and $-3$, this how their binary representation is in $32$-bit:
+
+$\bullet -6$
+
+$$
+11111111\ 11111111\ 11111111\ 11111010
+$$
+
+$\bullet -3$
+
+$$
+11111111\ 11111111\ 11111111\ 11111101
+$$
+
+Notice that in the binary representation of $-3$ and $-6$ the last $0$ in $-6$ is missing from $-3$. It almost looks like $-6$ was shifted towards the right by $1$ bit(but that's not the case here).
+
+Now, when we were debugging our program, \textbf{eax} had the following values in it. Binary representation has also been provided(in $32$-bit binary):
+
+$1^{st}$ value in \textbf{eax}: $-6$
+$$
+11111111\ 11111111\ 11111111\ 11111010
+$$
+
+$2^{nd}$ value in \textbf{eax}: $2147483645$
+$$
+01111111\ 11111111\ 11111111\ 11111101
+$$
+Now, here the second value in \textbf{eax} seems to be a result of shifting $-6$(the previous value of \textbf{eax}) to the right by $1$-bit.
+\end{document}

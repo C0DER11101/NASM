@@ -1,0 +1,177 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\begin{document}
+\section{Logical operators}\label{sec:sec1}
+\subsection{The AND, OR and NOT operators}\label{sec:subsec1}
+\paragraph{}
+Assembly program:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+	global _start
+	_start:
+		MOV eax, 0b1010
+		MOV ebx, 0b1100
+		
+		AND eax, ebx   ; AND operation
+		
+		MOV eax, 0b1010
+		MOV ebx, 0b1100
+		
+		OR eax, ebx    ; OR operation
+		
+		NOT eax        ; NOT operation
+		
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+The value in \textbf{eax} is $10$ and in \textbf{ebx} is $12$. The first operation is the \textbf{AND} operation. So, when we perform \textbf{AND} between $10$ and $12$ i.e
+
+\begin{align*}
+00000000\ 00000000\ 00000000\ 00001010 \\
+AND\ 00000000\ 00000000\ 00000000\ 00001100 \\
+\hline
+00000000\ 00000000\ 00000000\ 00001000 \\
+\end{align*}
+which results in $8$. This result is stored in \textbf{eax} as shown in the image below:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.43\textwidth]{Output57.png}
+\caption{\textbf{AND} operation}
+\label{fig:fig1}
+\end{figure}
+\newpage
+The next operation is \textbf{OR} and we re-assign the values $10$ and $12$ to \textbf{eax} and \textbf{ebx} respectively.
+
+So, we perform the \textbf{OR} operation between \textbf{eax} and \textbf{ebx} i.e
+
+\begin{align*}
+00000000\ 00000000\ 00000000\ 00001010 \\
+OR\ 00000000\ 00000000\ 00000000\ 00001100 \\
+\hline
+00000000\ 00000000\ 00000000\ 00001110 \\
+\end{align*}
+which results in $14$ and again stored in \textbf{eax} as shown below:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output58.png}
+\caption{\textbf{OR} operation}
+\label{fig:fig2}
+\end{figure}
+
+The final operation is the \textbf{NOT} operation. Here we basically invert all the set bits and the unset bits. The value in \textbf{eax} is $14$(from the previous \textbf{OR} operation).
+\begin{align*}
+NOT\ 00000000\ 00000000\ 00000000\ 00001110 \\
+\hline
+11111111\ 11111111\ 11111111\ 11110001 \\
+\end{align*}
+This value is $-15$ which gets stored in \textbf{eax}.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output59.png}
+\caption{\textbf{NOT} operation}
+\label{fig:fig3}
+\end{figure}
+
+\newpage
+\section{Masking}\label{sec:sec2}
+\paragraph{}
+Let's say, we have a value $10$ in \textbf{eax} and after performing a logical operation, we want only the last $4$-bits to be affected by the operation. Then we would use a mask. We need to \textbf{filter} those bits that we need.
+
+\textbf{Program:}
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+	global _start
+	
+	_start:
+		MOV eax, 0b1010
+		NOT eax
+		
+		AND eax, 0x0000000f
+		
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+
+If we perform a \textbf{NOT} operation on \textbf{eax} which stores $10$ then this is what we will get:
+\begin{align*}
+NOT\ 00000000\ 00000000\ 00000000\ 00001010 \\
+\hline
+11111111\ 11111111\ 11111111\ 11110101 \\
+\end{align*}
+is $-11$ which is stored in \textbf{eax} as shown below:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output60.png}
+\caption{$-11$ stored in \textbf{eax}}
+\label{fig:fig4}
+\end{figure}
+
+We only wanted the higher $24$-bits to change. We will use a mask that will only change the higher $24$-bits and will keep the lower $4$-bits unchanged.
+
+\textbf{0x0000000f} is a $32$-bit mask whose last $4$-bits are set. First we performed the \textbf{NOT} operation on \textbf{eax} and then we performed the \textbf{AND} operation between \textbf{eax} and the mask.
+\newpage
+So when we perform \textbf{AND} operation:
+\begin{align*}
+11111111\ 11111111\ 11111111\ 11110101 \\
+AND\ 00000000\ 00000000\ 00000000\ 00001111 \\
+\hline
+00000000\ 00000000\ 00000000\ 00000101 \\
+\end{align*}
+We get $5$ as the result.
+
+Image:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output61.png}
+\caption{Keeping the last $4$ bits unchanged}
+\label{fig:fig5}
+\end{figure}
+\newpage
+\section{The XOR operation}\label{sec:sec3}
+\paragraph{}
+\textbf{Program:}
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+	global _start
+	_start:
+		MOV eax, 0b1010
+		MOV ebx, 0b1100
+		
+		XOR eax, ebx
+		
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+We are performing \textbf{XOR} operation:
+\begin{align*}
+00000000\ 00000000\ 00000000\ 00001010 \\
+XOR\ 00000000\ 00000000\ 00000000\ 00001100 \\
+\hline
+00000000\ 00000000\ 00000000\ 00000110 \\
+\end{align*}
+We get $6$ which is stored in \textbf{eax} as shown below:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{Output62.png}
+\caption{\textbf{XOR}}
+\label{fig:fig6}
+\end{figure}
+\end{document}

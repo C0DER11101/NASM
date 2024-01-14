@@ -1,0 +1,59 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{animate}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+
+\usetikzlibrary{lindenmayersystems}
+\pgfdeclarelindenmayersystem{A}{%
+  \symbol{F}{\pgflsystemstep=0.6\pgflsystemstep\pgflsystemdrawforward}
+  \rule{A->F[+A][-A]}
+}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+\section{Loops}\label{sec:sec1}
+\paragraph{}
+Consider the following program:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+	list DB 1, 2, 3, 4
+
+section .text
+	global _start
+	_start:
+		MOV eax, 0
+		MOV cl, 0
+		
+		loop:
+			MOV bl, [list+eax]
+			ADD cl, bl
+			
+			INC eax
+			
+			CMP eax, 4
+			JGE end
+			JMP loop
+			
+		end:
+			MOV eax, 1
+			INT 80h
+\end{Verbatim}
+The instruction \textbf{INC} increments the value in register \textbf{eax} by $1$.
+
+The program basically calculates the sum of the all the elements of the list.
+
+\end{document}

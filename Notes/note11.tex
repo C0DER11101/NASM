@@ -1,0 +1,90 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+\section{Comparision and jump instructions}\label{sec:sec1}
+\paragraph{}
+Consider the following program:
+\begin{Verbatim}[numbers=left, frame=single]
+section .data
+
+section .text
+
+	global _start
+	
+	_start:
+		MOV eax, 3
+		MOV ebx, 2
+	
+		CMP eax, ebx
+		JL lesser
+		JMP end
+		
+	end:
+		MOV eax, 1
+		INT 80h
+		
+	lesser:
+		MOV eax, 1
+		INT 80h
+\end{Verbatim}
+The \textbf{CMP} instruction basically performs subtraction between \textbf{eax} and \textbf{ebx}. If \textbf{eax} $-$ \textbf{ebx} results into a positive number then it will conclude that \textbf{eax} $>$ \textbf{ebx}, if the result is negative then \textbf{eax} $<$ \textbf{ebx} and if the result is $0$ then \textbf{eax} $=$ \textbf{ebx}.
+
+\vspace{10pt}
+\textbf{JL} performs a signed comparision jump after a \textbf{CMP} if the destination operand(\textbf{eax}) is less than the source operand(\textbf{ebx}). Now, if \textbf{eax} is not less than \textbf{ebx} then the program will execute normally. The control will execute \textbf{JMP} instruction which performs an \textbf{unconditional} jump to the label \textbf{end}.
+
+\vspace{10pt}
+Labels are just user-defined names that are provided to make the code more readable, they are not functions. Meaning that if we have a label other than the \textbf{\_start} label and we have not used any jump statements whatsoever, then the code inside of those labels will get executed \textbf{normally}.
+\newpage
+\subsection{More jump instructions}\label{sec:subsec1}
+\paragraph{}
+\begin{Verbatim}[frame=single]
+JE lesser
+\end{Verbatim}
+Jump to the label \textbf{lesser} if \textbf{eax} $=$ \textbf{ebx}.
+
+\begin{Verbatim}[frame=single]
+JNE lesser
+\end{Verbatim}
+Jump to label \textbf{lesser} if \textbf{eax} $\neq$ \textbf{ebx}.
+
+\begin{Verbatim}[frame=single]
+JG lesser
+\end{Verbatim}
+Jump to label \textbf{lesser} if \textbf{eax} $>$ \textbf{ebx}.
+
+\begin{Verbatim}[frame=single]
+JGE lesser
+\end{Verbatim}
+Jump to label \textbf{lesser} if \textbf{eax} $\geq$ \textbf{ebx}.
+
+\begin{Verbatim}[frame=single]
+JLE lesser
+\end{Verbatim}
+Jump to label \textbf{lesser} if \textbf{eax} $\leq$ \textbf{ebx}.
+
+\begin{Verbatim}[frame=single]
+JZ lesser
+\end{Verbatim}
+Visit this \href{https://www.aldeid.com/wiki/X86-assembly/Instructions/jz}{link} for this instruction.
+
+\begin{Verbatim}[frame=single]
+JNZ lesser
+\end{Verbatim}
+Visit this \href{https://www.aldeid.com/wiki/X86-assembly/Instructions/jnz}{link} for this instruction.
+\end{document}

@@ -1,0 +1,66 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+	\section{Comparing floating point numbers}\label{sec:sec1}
+	\paragraph{}
+	Consider this program:
+	
+	\begin{Verbatim}[numbers=left, frame=single]
+		section .data
+			x DD 3.14
+			y DD 2.1
+			
+		section .text
+			global _start
+			_start:
+				MOVSS xmm0, [x]
+				MOVSS xmm1, [y]
+				
+				UCOMISS xmm0, xmm1
+				JA greater
+				JMP end
+				
+			greater:
+				MOV eax, 1
+				INT 80h
+				
+			end:
+				MOV eax, 1
+				INT 80h
+	\end{Verbatim}
+
+Here, we are comparing two floating point numbers. For comparision between floating point numbers we donot use the \textbf{CMP} instruction, instead we use the \href{https://www.felixcloutier.com/x86/ucomiss}{\textbf{UCOMISS}} instruction. This works the same way as the \textbf{CMP} instruction works, it also sets some eflags based on the comparisions.
+
+\vspace{10pt}
+The jumps that we perform with floating point comparisions are also different. Here we donot perform \textbf{JGE}, or \textbf{JGT}, etc... We instead use instructions \textbf{JB}(\textbf{J}ump \textbf{B}elow), \textbf{JA}(\textbf{J}ump \textbf{A}bove).
+\newpage
+There are many jump instructions:
+\begin{itemize}
+	\item \textbf{JE $<$label$>$} $\rightarrow$ \textbf{if op1 $==$ op2}
+	\item \textbf{JNE $<$label$>$} $\rightarrow$ \textbf{if op1 $!=$ op2}
+	\item \textbf{JB $<$label$>$} $\rightarrow$ \textbf{if op1 $<$ op2}
+	\item \textbf{JBE $<$label$>$} $\rightarrow$ \textbf{if op1 $\leq$ op2}
+	\item \textbf{JA $<$label$>$} $\rightarrow$ \textbf{if op1 $>$ op2}
+	\item \textbf{JAE $<$label$>$} $\rightarrow$ \textbf{if op1 $\geq$ op2}
+\end{itemize}
+
+\textbf{Source: } \href{https://eng.libretexts.org/Bookshelves/Computer_Science/Programming_Languages/x86-64_Assembly_Language_Programming_with_Ubuntu_(Jorgensen)/18%3A_Floating-Point_Instructions/18.06%3A_Section_6-#:~:text=The%20conditional%20control%20instructions%20include,above%20or%20equal%20(jae).}{Click here}.
+
+But we can still use the \textbf{JMP} instruction which jumps to a label unconditionally.
+\end{document}

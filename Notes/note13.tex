@@ -1,0 +1,85 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+	\section{Floating point numbers}\label{sec:sec1}
+	\paragraph{}
+	Consider the following program:
+	\begin{Verbatim}[numbers=left, frame=single]
+		section .data
+			x DD 3.14
+			y DD 2.1
+			
+		section .text
+			MOVSS xmm0, [x]
+			MOVSS xmm1, [y]
+			
+			ADDSS xmm0, xmm1
+			
+			MOV eax, 1
+			INT 80h
+	\end{Verbatim}
+See about \textbf{xmm} registers \href{https://www.oreilly.com/library/view/mastering-assembly-programming/9781787287488/50685a1c-0812-407c-8d7d-d7a9202722b3.xhtml}{here}. 
+
+\vspace{10pt}
+\href{https://stackoverflow.com/questions/10025360/how-many-xmm-registers-are-available-on-an-x86-processor-supporting-sse}{How many \textbf{xmm} registers?}.
+
+\vspace{10pt}
+\textbf{MOVSS} instruction is used to move the floating point values to the \textbf{xmm} registers. \textbf{SS} means \textbf{S}caler \textbf{S}ingle precision.
+
+\vspace{10pt}
+We will execute this program with GDB.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.35\textwidth]{Output90.png}
+	\caption{Values in \textbf{xmm}}
+	\label{fig:fig1}
+\end{figure}
+
+We can see a bunch of arrays(I guess) which have a bunch of values in them.
+
+To get the value stored in \textbf{xmm0} we particularly use the \textbf{v4\_float} array.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.5\textwidth]{Output91.png}
+	\caption{\textbf{v4\_float} array's $0^{th}$ element(\textbf{xmm0})}
+	\label{fig:fig2}
+\end{figure}
+
+Notice that we assigned the value $3.14$ to \textbf{xmm0} but in this image it's showing $3.1400001$.
+\newpage
+Similar behaviour can be seen in \textbf{xmm1} as well.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.5\textwidth]{Output92.png}
+	\caption{\textbf{v4\_float} array's $0^{th}$ element(\textbf{xmm1})}
+	\label{fig:fig3}
+\end{figure}
+
+The reason why these values are not stored exactly as they were defined is that we use a special notation called \href{https://staffwww.fullcoll.edu/aclifton/cs241/lecture-floating-point-simd.html}{IEEE} floating-point notations.
+
+From the image below:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.5\textwidth]{Output93.png}
+	\caption{Sum of \textbf{xmm0} and \textbf{xmm1}}
+	\label{fig:fig4}
+\end{figure}
+
+We can see that the sum is also not exact.
+\end{document}

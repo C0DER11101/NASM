@@ -1,0 +1,68 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+	\section{Calling C functions}\label{sec:sec1}
+	\paragraph{}
+	Assembly program:
+	\begin{lstlisting}[frame=single, breaklines=true]
+		extern test
+		extern exit
+		
+		section .text
+			global main
+			
+			main:
+				PUSH 1
+				PUSH 2
+				
+				CALL test
+				
+				PUSH eax
+				CALL exit
+	\end{lstlisting}
+Also, the \textbf{test()} function is defined in \textbf{test.c} as:
+\begin{lstlisting}[frame=single, breaklines=true]
+	int test(int a, int b){
+		printf("Sum\n");
+		return (a+b);
+	}
+\end{lstlisting}
+We \textbf{PUSH} $1$ and $2$ into the stack($2$ is the first argument of \textbf{test()} and $1$ is the second argument). After this we \textbf{CALL} the \textbf{test()} function with the arguments(from the stack). Now, \textbf{test()} returns the sum of the arguments passed to it. \underline{\textbf{The return value is stored in the register:}} \textbf{\textit{eax}}.
+So we can \textbf{PUSH} the value of \textbf{eax} onto the stack and \textbf{CALL} \textbf{exit()}.
+
+Now comes the compilation part, so first we use the nasm command to assemble our program:
+\begin{lstlisting}[frame=single, breaklines=true]
+	$ nasm -f elf -o asm16.o asm16.asm
+\end{lstlisting}
+
+Next, compile using \textbf{gcc}:
+\begin{lstlisting}[frame=single, breaklines=true]
+	$ gcc -no-pie -m32 asm16.o test.c -o asm16
+\end{lstlisting}
+Here we have to provide the \textbf{C} file where we have defined our \textbf{test()} function.
+\newpage
+We pushed \textbf{eax} into the stack and called \textbf{exit}. Now \textbf{exit} will execute as \textbf{exit(the value in eax)} and that value in \textbf{eax} will get stored in \textbf{\$?} variable which we can see from the image below:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.2\textwidth]{Output96.png}
+	\caption{Output}
+	\label{fig:fig1}
+\end{figure}
+\end{document}

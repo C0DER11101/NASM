@@ -1,0 +1,119 @@
+\documentclass{article}
+
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+	\section{Calling standard C functions}\label{sec:sec1}
+	\paragraph{}
+	Consider the following program:
+	\begin{Verbatim}[numbers=left, frame=single]
+		
+		extern printf   ; C
+		extern exit     ; C
+		section .data
+			msg1 DB "Hello world!",0
+			msg2 DB "This is a test!",0
+			fmt DB "Output is: %s %s",10,0
+		section .text
+			global main
+			
+			main:
+				PUSH msg2
+				PUSH msg
+				PUSH fmt
+				CALL printf
+				
+				PUSH 10
+				CALL exit
+	\end{Verbatim}
+Here, we are calling some C standard functions. \textbf{extern} means that which is external. In this case, \textbf{printf} and \textbf{exit} are external functions. These are the standard functions of C. In x86 assembly, The C parameters are passed to the called routine by pushing them onto the stack. They are pushed onto the stack from right to left(see: \href{https://stackoverflow.com/questions/16255608/calling-c-functions-from-x86-assembly-language}{StackOverflow}).
+
+The \textbf{PUSH} instruction basically pushes the arguments and parameters into the stack(\textbf{LIFO}).
+Now, consider the snippet:
+\begin{lstlisting}[frame=single, breaklines=true]
+	PUSH msg2
+	PUSh msg
+	PUSH fmt
+	CALL printf
+\end{lstlisting}
+We know that the \textbf{printf()} function in C is of used as: \textbf{printf(".....\%s...\%d...\%f....\%....", string1, var1, fvar1, ....);}. Keeping that in mind when \textbf{printf()} will be called/invoked, then it should be called in this exact syntax. To ensure that we need to push into the stack in such an order that while popping from the stack the order is matched. So, here, we first push \textbf{msg2}, then \textbf{msg} and finally \textbf{fmt}. So \textbf{fmt} was pushed last. In stack, the last element to be inserted is the first element to be eliminated. So \textbf{fmt} will be popped first, then \textbf{msg} will be popped and then finally \textbf{msg2} will be popped(it was the first element to be inserted) and hence the order of arguments for \textbf{printf()} will remain intact. First the format specifiers, then the values corresponding to those format specifiers.
+\newpage
+Now, to produce the executable for this program, we will need to use \textbf{nasm} and \textbf{gcc} as follows:
+\begin{Verbatim}[frame=single]
+	$ nasm -f elf -o <filename>.o <filename>.asm
+\end{Verbatim}
+
+Next, we will use the \textbf{gcc} command:
+\begin{Verbatim}[frame=single]
+	$ gcc -no-pie -m32 <filename>.o -o <executableName>
+\end{Verbatim}
+The option \textbf{-no-pie} disables \textbf{P}osition \textbf{I}ndependent \textbf{E}xecutable generation. The \textbf{-m32} specifies that the compilation should be done for a $32$-bit target.
+
+Also, while running this command, I encountered some issues:
+\begin{lstlisting}[frame=single, breaklines=true]
+	$ gcc -no-pie -m32 asm15.o -o asm15
+	
+	/usr/bin/ld: cannot find crt1.o: No such file or directory
+	/usr/bin/ld: cannot find crti.o: No such file or directory
+	/usr/bin/ld: skipping incompatible /usr/lib/gcc/x86_64-linux-gnu/11/libgcc.a when searching for -lgcc
+	/usr/bin/ld: cannot find -lgcc: No such file or directory
+	/usr/bin/ld: skipping incompatible /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 when searching for libgcc_s.so.1
+	/usr/bin/ld: cannot find libgcc_s.so.1: No such file or directory
+	/usr/bin/ld: skipping incompatible /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 when searching for libgcc_s.so.1
+	/usr/bin/ld: skipping incompatible /usr/lib/gcc/x86_64-linux-gnu/11/libgcc.a when searching for -lgcc
+	/usr/bin/ld: cannot find -lgcc: No such file or directory
+	collect2: error: ld returned 1 exit status
+\end{lstlisting} % wrapping text in code section
+So I installed the $32$-bit C library development files using this command:
+\begin{lstlisting}[frame=single]
+	$ sudo apt-get install libc6-dev:i386
+\end{lstlisting}
+\newpage
+After this, I again used \textbf{gcc}, and encountered these issues:
+
+\begin{lstlisting}[frame=single, breaklines=true]
+	$ gcc -no-pie -m32 asm15.o -o asm15
+	
+	/usr/bin/ld: skipping incompatible /usr/lib/gcc/x86_64-linux-gnu/11/libgcc.a when searching for -lgcc
+	/usr/bin/ld: cannot find -lgcc: No such file or directory
+	/usr/bin/ld: skipping incompatible /usr/lib/gcc/x86_64-linux-gnu/11/libgcc.a when searching for -lgcc
+	/usr/bin/ld: cannot find -lgcc: No such file or directory
+	collect2: error: ld returned 1 exit status
+\end{lstlisting}
+To resolve these issues, I installed \textbf{gcc-multilib}(Source: \href{https://askubuntu.com/questions/409905/apt-get-error-loading-libgcc-s-so-1}{Click here}):
+\begin{lstlisting}[frame=single]
+	$ sudo apt-get install gcc-multilib
+\end{lstlisting}
+
+Finally, it worked!!
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.3\textwidth]{Output94.png}
+	\caption{Success!}
+	\label{fig:fig1}
+\end{figure}
+
+We can see the output of this program. The value $10$ that we had pushed gets stored in \textbf{\$?} and we can see its value as shown below:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Output95.png}
+	\caption{Output}
+	\label{fig:fig2}
+\end{figure}
+\end{document}

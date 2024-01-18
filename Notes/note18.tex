@@ -30,7 +30,7 @@
 			global main
 			
 			addTwo:
-				PUSh ebp
+				PUSH ebp
 				MOV ebp, esp
 				ADD eax, ebx
 				
@@ -44,7 +44,7 @@
 			
 			main:
 				PUSH 4
-				PUSh 1
+				PUSH 1
 				CALL addTwo
 				MOV ebx, eax
 				

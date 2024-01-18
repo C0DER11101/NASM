@@ -1,0 +1,213 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+	\section{Passing Data to Functions on the Stack}\label{sec:sec1}
+	\paragraph{}
+	Consider the following assembly program:
+	
+	\begin{lstlisting}[frame=single, breaklines=true]
+		section .data
+		
+		section .text
+		
+			global main
+			
+			addTwo:
+				PUSh ebp
+				MOV ebp, esp
+				ADD eax, ebx
+				
+				MOV eax, [ebp+8]
+				MOV ebx, [ebp+12]
+				
+				ADD eax, ebx
+				POP ebp
+				
+				RET
+			
+			main:
+				PUSH 4
+				PUSh 1
+				CALL addTwo
+				MOV ebx, eax
+				
+				MOV eax, 1
+				INT 80h
+	\end{lstlisting}
+
+Here, we are trying to implement parameterized functions!!! To implement parameterized functions in x86, we use the stack(pretty much like for calling standard C functions or even user-defined C functions).
+
+In the program, we are implementing an add function which basically adds two integers and returns their sum.
+\newpage
+Snippet from the program:
+\begin{lstlisting}[frame=single, breaklines=true]
+	main:
+		PUSH 4
+		PUSH 1
+		CALL addTwo
+		MOV ebx, eax
+		
+		MOV eax, 1
+		INT 80h
+\end{lstlisting}
+Here, the first two lines push the values $4$ and then $1$ into the stack. When we call the \textbf{addTwo} function using \textbf{CALL} instruction then the return address(the address of instruction after the \textbf{CALL} instruction that is \textbf{MOV ebx, eax} in our case) is pushed into the stack. So the overall stack looks like this:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{Stack1.jpg}
+	\caption{The stack}
+	\label{fig:fig1}
+\end{figure}
+
+In order to access the integer values from the stack in \textbf{addTwo}, we use this approach:
+\begin{lstlisting}[frame=single, breaklines=true]
+	addTwo:
+		PUSH ebp
+		MOV ebp, esp
+\end{lstlisting}
+Here, we are pushing the register \textbf{EBP} into the stack. This register basically acts as a base of a stack frame. If we called multiple functions inside a function then we will need something to distinguish between everything that is associated with the first function and everything that is associated with the second function. The \textbf{EBP} register is like the divider.
+
+Hence, our stack looks something like this:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{Stack2.jpg}
+	\caption{\textbf{EBP} inside the stack}
+	\label{fig:fig2}
+\end{figure}
+
+We also do \textbf{MOV ebp, esp} where we move the value in \textbf{ESP} into \textbf{EBP} so that \textbf{EBP} and \textbf{ESP} both the registers are pointing to the same location.
+
+With this, now, we will be referencing values \textbf{relative} to \textbf{EBP} that is as shown below:
+\begin{lstlisting}[frame=single, breaklines=true]
+	addTwo:
+		PUSH ebp
+		MOV ebp, esp
+		
+		MOV eax, [ebp+8]
+		MOV ebx, [ebp+12]
+		
+		ADD eax, ebx
+\end{lstlisting}
+\newpage
+So, here we are accessing the values $1$ and $4$ from the stack(see figure below), and storing them into registers \textbf{EAX} and \textbf{EBX} respectively:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Stack3.jpg}
+	\caption{Stack elements relative to \textbf{EBP}}
+	\label{fig:fig3}
+\end{figure}
+
+So, we can see that the values are $4$ bytes apart from each other.
+
+Now, we cannot return from \textbf{addTwo} because right now, \textbf{ESP} is pointing to \textbf{EBP} which is at the top of the stack(see \hyperref[fig:fig3]{Figure~\ref{fig:fig3}}). In order to make \textbf{ESP} point to the return address in the stack, we will have to \textbf{POP} \textbf{EBP} from the stack.
+
+Hence,
+\begin{lstlisting}[frame=single, breaklines=true]
+	POP ebp
+\end{lstlisting}
+
+This pops \textbf{EBP} from the stack and \textbf{ESP} points to the return address which is now the new top of the stack.
+\newpage
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{Stack4.jpg}
+	\caption{\textbf{EBP} popped from stack}
+	\label{fig:fig4}
+\end{figure}
+
+Now, we can return back to the caller.
+\newpage
+\section{Verification}\label{sec:sec2}
+\paragraph{}
+We will use GDB to see how the values get stored into the stack:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.2\textwidth]{Output107.png}
+	\caption{GDB}
+	\label{fig:fig5}
+\end{figure}
+
+So, we executed the first two lines.
+\newpage
+Once we enter \textbf{addTwo}, we will view the value in \textbf{ESP}.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.1\textwidth]{Output108.png}
+	\caption{In \textbf{addTwo}}
+	\label{fig:fig6}
+\end{figure}
+
+Now, that we are inside \textbf{addTwo}, we will check the values of \textbf{ESP}, we also pushed \textbf{EBP} into the stack and made \textbf{EBP} point to the same memory location as \textbf{ESP} as shown below:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Output109.png}
+	\caption{Values in \textbf{ESP} and \textbf{EBP}}
+	\label{fig:fig7}
+\end{figure}
+\newpage
+Now, we will see what is stored in the address \textbf{0xffffcf3c}.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.6\textwidth]{Output110.png}
+	\caption{Value in \textbf{0xffffcf3c}}
+	\label{fig:fig8}
+\end{figure}
+
+The address \textbf{0xf7ffd020} is the address in \textbf{EBP}.
+
+To verify it, we will see $4$ slots of memory from the stack:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.2\textwidth]{Output111.png}
+	\caption{Values in the stack}
+	\label{fig:fig9}
+\end{figure}
+
+We can see that the top of the stack contains \textbf{0xf7ffd020} which is the address stored in \textbf{EBP}. Then we can see the return address \textbf{0x08049186} which is the address of the instruction \textbf{MOV ebx, eax}, after that we can see the value $1$ in hexadecimal and finally we see $4$ in hex.
+\newpage
+Now, we go on executing the instructions in \textbf{addTwo}:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.1\textwidth]{Output112.png}
+	\caption{Execution in progress}
+	\label{fig:fig10}
+\end{figure}
+
+We can see that we are about to execute the \textbf{RET} instruction that is we are about to return back to the caller(main).
+
+Now, we will check what is in the stack:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.2\textwidth]{Output113.png}
+	\caption{\textbf{EBP} removed from stack}
+	\label{fig:fig11}
+\end{figure}
+
+We can see that \textbf{EBP} has been removed and \textbf{ESP} has been decremented and now the return address is at the top of the stack. Now after executing the \textbf{RET} instruction, we will return to the instruction right after the \textbf{CALL} instruction in main.
+
+\newpage
+We can also see that the addition was performed and the result is stored in \textbf{EAX}:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Output114.png}
+	\caption{\textbf{EAX} stores result}
+	\label{fig:fig12}
+\end{figure}
+
+\end{document}

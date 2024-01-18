@@ -8,7 +8,7 @@ section .text
 	global main
 	
 	addTwo:
-		PUSh ebp
+		PUSH ebp
 		MOV ebp, esp
 		MOV eax, [ebp+8]
 		MOV ebx, [ebp+12]

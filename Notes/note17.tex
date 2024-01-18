@@ -1,0 +1,153 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+	\section{Basics of functions/procedures in x86}\label{sec:sec1}
+	\paragraph{}
+	Assembly program:
+	\begin{lstlisting}[frame=single, breaklines=true]
+		section .data
+		
+		section .text
+			global main
+			
+			addTwo:
+				ADD eax, ebx
+				RET
+			
+			main:
+				MOV eax, 4
+				MOV ebx, 1
+				
+				CALL addTwo
+				
+				MOV ebx, eax
+				
+				MOV eax, 1
+				INT 80h
+	\end{lstlisting}
+\textbf{addTwo} is a procedure/function that basically \textbf{ADD}s two registers and \textbf{RET}urns the sum.
+
+\vspace{10pt}
+Debugging the program using GDB and observing the stack. \\
+\textbf{ESP} $\rightarrow$ \textbf{E}xtended \textbf{S}tack \textbf{P}ointer. This register contains the address of the top of the stack.
+
+The control flow is very simple in this program. We have two registers \textbf{ESP} and \textbf{EIP}(the instruction pointer). The \textbf{EIP} always stores the address of(or points to) the next instruction to be executed. It's like the program counter(\textbf{pc} register) in MIPS.
+
+\vspace{10pt}
+Now, when \textbf{addTwo} is \textbf{CALL}ed i.e when the instruction \textbf{CALL addTwo} is executed, then \textbf{EIP} was pointing to the next instruction that is \textbf{MOV ebx, eax}. Now, \textbf{ESP} was decremented(\textbf{stack grows downwards}) and the address that \textbf{EIP} was holding gets pushed onto the stack. So, the address that \textbf{EIP} was holding is the new top of the stack and \textbf{ESP} points to this new top. Now, since the address held by \textbf{EIP} gets stored in the stack, the address of the instruction \textbf{add eax, ebx} gets stored in \textbf{EIP}. Now, the body of \textbf{addTwo} starts getting executed. When \textbf{addTwo} \textbf{RET}urns then \textbf{ESP} is incremented, that is the the address of \textbf{MOV ebx, eax} is popped from the stack and restored into \textbf{EIP} and so the we see the lines after the \textbf{CALL} instruction execute normally.
+\newpage
+Now, we just executed the first line inside our \textbf{main} procedure(rather label).
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{Output98.png}
+	\caption{Executing the first line}
+	\label{fig:fig1}
+\end{figure}
+
+If we inspect the \textbf{EIP} we will see that it stores the address of the next instruction to be executed(the highlighted instruction in the image above).
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{Output97.png}
+	\caption{Address pointed to by \textbf{EIP}}
+	\label{fig:fig2}
+\end{figure}
+
+Also, \textbf{ESP} is currently storing some address(which is not known to us), that is basically it is pointing to whatever is in the top of the stack at the moment.
+\newpage
+Now, we executed the next instruction:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.2\textwidth]{Output99.png}
+	\caption{Executing}
+	\label{fig:fig3}
+\end{figure}
+
+We can see that the value of \textbf{EIP} is the address of the next instruction(the highlighted one) and \textbf{ESP} is still unchanged.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{Output100.png}
+	\caption{\textbf{EIP} and \textbf{ESP}}
+	\label{fig:fig4}
+\end{figure}
+
+\newpage
+Let's execute the next line:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.2\textwidth]{Output101.png}
+	\caption{\textbf{addTwo} about to be executed}
+	\label{fig:fig5}
+\end{figure}
+
+We can see that the first instruction of \textbf{addTwo} is about to get executed. Let's see what has changed in \textbf{EIP} and \textbf{ESP}:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{Output102.png}
+	\caption{Changes in \textbf{EIP} and \textbf{ESP}}
+	\label{fig:fig6}
+\end{figure}
+
+We can see that \textbf{EIP} stores the address of the first instruction of \textbf{addTwo} procedure and \textbf{ESP} stores \textbf{0xffffcf48}. So the value in \textbf{ESP} decreased by $4$.
+\newpage
+Now, if we try to view what is in this address pointed to by \textbf{ESP} then we will get:
+\begin{figure}[h]
+	\includegraphics[width=0.7\textwidth]{Output103.png}
+	\centering
+	\label{fig:fig7}
+\end{figure}
+
+We can see that the address that we get after using the \textbf{x/x} command is the address of the instruction \textbf{mov ebx, eax} which is the instruction right after \textbf{CALL addTwo} instruction as seen from \hyperref[fig:fig5]{Figure~\ref{fig:fig5}}.
+
+Now, we are in the \textbf{RET}urn instruction of \textbf{addTwo}:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.2\textwidth]{Output104.png}
+	\caption{\textbf{RET}}
+	\label{fig:fig8}
+\end{figure}
+\newpage
+We execute this line. After that, we can see that the instruction \textbf{mov ebx, eax} is the next instruction to be executed.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.2\textwidth]{Output106.png}
+	\caption{After \textbf{CALL}}
+	\label{fig:fig9}
+\end{figure}
+
+We can also see that \textbf{ESP} is now restored and \textbf{EIP} stores the address of the instruction \textbf{mov ebx, eax}.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Output105.png}
+	\caption{\textbf{ESP} and \textbf{EIP}}
+	\label{fig:fig10}
+\end{figure}
+
+This \href{https://youtu.be/RU5vUIl1vRs?si=4SnJANio6Tap4lX4}{video} helped me a lot in understanding the stack.
+\newpage
+\section{Sources}
+\begin{itemize}
+	\item \url{https://en.wikibooks.org/wiki/X86_Disassembly/The_Stack}
+	\item \url{https://wiki.osdev.org/Stack}
+	\item \url{https://www.youtube.com/watch?v=vcfQVwtoyHY}
+	\item \url{https://youtu.be/F58WAnf2gr0?si=Bj4B00pnJ7N0rG5v}
+	\item \href{https://stackoverflow.com/questions/40324514/what-is-the-difference-between-esp-and-eip-registers}{https://stackoverflow.com/questions/40324514/what-is-the-difference-between-esp-and-eip-registers}
+	\item \url{https://stackoverflow.com/questions/3699283/what-is-stack-frame-in-assembly}
+\end{itemize}
+\end{document}

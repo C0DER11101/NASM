@@ -1,0 +1,142 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=red,
+	urlcolor=blue
+}
+
+\makeatletter
+
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{-3.25ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\begin{document}
+	\section{Opening and reading files}\label{sec:sec1}
+	\paragraph{}
+	Simple assembly program:
+	\begin{lstlisting}[numbers=left, frame=single, breaklines=true]
+section .data
+	pathname DD "/home/priyanuj/temp/test.txt"
+section .text
+	global main
+	
+	main:
+		MOV eax, 5
+		MOV ebx, pathname
+		MOV ecx, 0
+		INT 80h
+		
+		MOV eax, 1
+		INT 80h
+	\end{lstlisting}
+We are opening a text file for reading in the program above. $5$ is the code that will be stored in \textbf{eax}, \textbf{ebx} will store the pathname and \textbf{ecx} will store the mode in which the file will be opened. Here $0$ indicates that file is opened in read-only mode.
+
+\subsection{Executing using GDB}\label{sec:ssec1}
+\paragraph{}
+We now, execute the program using GDB. First, we assemble and compile the program using \textbf{nasm} and \textbf{gcc}.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.1\textwidth]{Output115.png}
+	\caption{Code and address of pathname moved into \textbf{eax} and \textbf{ebx} respectively}
+	\label{fig:fig1}
+\end{figure}
+\newpage
+We can see the values in \textbf{eax} and \textbf{ebx} as follows:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{Output116.png}
+	\caption{Values in \textbf{eax} and \textbf{ebx}}
+	\label{fig:fig2}
+\end{figure}
+
+\textbf{ebx} stores the address of the \textbf{pathname}. We can view how the pathname is stored as:
+\begin{Verbatim}[frame=single]
+(gdb) x/10x 0x804c018
+\end{Verbatim}
+
+This will give us the following output:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.2\textwidth]{Output117.png}
+	\caption{String stored in addresses}
+	\label{fig:fig3}
+\end{figure}
+
+We can also view the actual string as:
+\begin{Verbatim}[frame=single]
+(gdb) x/10s 0x804c018
+\end{Verbatim}
+We see the following output:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{Output118.png}
+	\caption{Pathname stored in memory}
+	\label{fig:fig4}
+\end{figure}
+\newpage
+Now, after executing the interrupt \textbf{INT 80h}, we can see that the value of \textbf{eax} has changed:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{Output119.png}
+	\caption{\textbf{eax} changed}
+	\label{fig:fig5}
+\end{figure}
+
+Now, after the performing the interrupt, a file descriptor(an integer) is returned in \textbf{eax}. Here the file descriptor is $3$.
+
+\newpage
+\section{Reading contents from the file}\label{sec:sec2}
+\paragraph{}
+We can use this file descriptor to read data from a file.
+\begin{lstlisting}[frame=single, numbers=left, breaklines=true]
+section .data
+	pathname DD "/home/priyanuj/temp/test.txt"
+
+section .bss
+	buffer RESB 1024
+
+section .text
+	MOV eax, 5
+	MOV ebx, pathname
+	MOV ecx, 0
+	INT 80h
+	
+	MOV ebx, eax
+	MOV eax, 3
+	MOV ecx, buffer
+	MOV edx, 1024
+	INT 80h
+	
+	MOV eax, 1
+	INT 80h
+\end{lstlisting}
+In order to save the read data, we need a buffer, so we declared an uninitialized buffer of $1024$ bytes. Now, the file descriptor is stored in \textbf{eax}, so we need to move it to \textbf{ebx} first so that we can store the code $3$ into \textbf{eax} which is the code for \textbf{sys\_read} so that we can read from the file.
+\newpage
+The image below shows the execution of the program:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.1\textwidth]{Output120.png}
+	\caption{Executing}
+	\label{fig:fig6}
+\end{figure}
+
+We can see an address \textbf{0x804c038} which is being moved into \textbf{ecx}. That is actually the address of the buffer \textbf{buffer}.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Output121.png}
+	\caption{Value in \textbf{eax} and the contents of \textbf{0x804c038}}.
+	\label{fig:fig7}
+\end{figure}
+
+So, the we can see that \textbf{eax} stores the number $44$. The number actually represents the number of characters read from the file. So, it read $44$ characters from the file because there were $44$ characters in the file.
+
+The string is stored in the memory slot starting from the address \textbf{0x804c038} which we can see from the image above.
+\end{document}
